@@ -1,0 +1,3 @@
+[submodule "LogParser"]
+	path = LogParser
+	url = https://github.com/CS160-coolFolks/LogParser.git
