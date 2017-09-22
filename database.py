@@ -1,4 +1,5 @@
 from flask import g
+import json
 import os
 
 
@@ -127,6 +128,55 @@ def delete_log(user_id, log_id):
              WHERE user_id = ? AND
                    id = ?
              """, [user_id, log_id])
+
+    g.db.commit()
+
+
+def get_all_confirmations():
+    rows = query_db("""
+                    SELECT token, is_error
+                    FROM confirmations
+                    """)
+
+    for row in rows:
+        row['is_error'] = bool(row['is_error'])
+
+    return rows
+
+
+def create_confirmation(token, is_error):
+    is_error = int(is_error)
+
+    query_db("""
+             INSERT INTO confirmations (token, is_error)
+             VALUES (?, ?)
+             """, [token, is_error])
+
+    # Creating a confirmation invalidates all stored analyses. This is a possible area for optimization.
+    query_db("""
+             DELETE FROM analyses
+             """)
+
+    g.db.commit()
+
+
+def get_analysis(log_id):
+    row = query_db("""
+                   SELECT analysis_json
+                   FROM analyses
+                   WHERE log_id = ?
+                   """, [log_id], one=True)
+
+    return json.loads(row['analysis_json']) if row else None
+
+
+def create_analysis(log_id, analysis):
+    analysis_json = json.dumps(analysis)
+
+    query_db("""
+             INSERT INTO analyses (log_id, analysis_json)
+             VALUES (?, ?)
+             """, [log_id, analysis_json])
 
     g.db.commit()
 
