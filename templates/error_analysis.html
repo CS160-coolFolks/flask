@@ -1,0 +1,27 @@
+{% extends "logged_in.html" %}
+{% block title %}Analyze{% endblock %}
+{% block body2 %}
+    <h1>Analyze logs</h1>
+    <form method="POST">
+        <!-- From -->
+        <!-- To -->
+        <div class="form-check">
+            <label class="form-check-label">
+                <input class="form-check-input" type="radio" name="type" value="type1">
+                Type 1
+            </label>
+        </div>
+        <div class="form-check">
+            <label class="form-check-label">
+                <input class="form-check-input" type="radio" name="type" value="type2">
+                Type 2
+            </label>
+        </div>
+        <div class="form-check disabled">
+            <label class="form-check-label">
+                <input class="form-check-input" type="radio" name="type" value="type3">
+                Type
+            </label>
+        </div>
+    </form>
+{% endblock %}
