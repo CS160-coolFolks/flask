@@ -1,10 +1,12 @@
-from flask import Flask, g, session, redirect, request, render_template
+from flask import Flask, g, json, session, redirect, request, render_template
 import os
 import re
 import scrypt
 import sqlite3
 
 import database
+
+from LogParser import LogParser
 
 
 DATABASE = 'database.sqlite3'
@@ -182,6 +184,7 @@ def get_file_management():
 def post_file_management():
     if 'user_id' not in session:
         return redirect('/sign_in?next=/file_management')
+
     user_id = session['user_id']
     email = session['email']
 
@@ -205,6 +208,7 @@ def post_file_management():
         blob = new_log.read()
 
         database.create_log(user_id, filename, blob)
+
     else:  # 'delete' in request.form
         # The user pressed the 'Delete' button.
         log_ids = [key for key in request.form if re.match(r'^\d+$', key)]
@@ -217,6 +221,54 @@ def post_file_management():
                            page='file_management',
                            email=email,
                            logs=logs)
+
+
+@app.route('/error_analysis')
+def get_error_analysis():
+    if 'user_id' not in session:
+        return redirect('/sign_in?next=/file_management')
+
+    user_id = session['user_id']
+
+    ready_db()
+    logs = database.get_log_filenames(user_id)
+
+    if logs is None:
+        return redirect('/file_management')
+
+    return render_template('error_analysis.html',
+                           logs=logs)
+
+
+@app.route('/error_analysis/data/<log_id>.json')
+def get_error_analysis_data(log_id):
+    if 'user_id' not in session:
+        response = json.jsonify(error='Not signed in')
+        response.status_code = 401
+        return response
+
+    user_id = session['user_id']
+
+    ready_db()
+
+    # See if we've done the analysis at some point in the past already.
+    analysis = database.get_analysis(log_id)
+
+    # Nope, let's do it now.
+    if analysis is None:
+        log_file = database.get_log(user_id, log_id)
+
+        if log_file is None:
+            response = json.jsonify(error='Log file not found')
+            response.status_code = 404
+            return response
+
+        confirmed_errors, confirmed_non_errors = database.get_all_confirmations()
+        analysis = LogParser.analyze(log_file, confirmed_errors, confirmed_non_errors)
+
+        database.create_analysis(log_id, analysis)
+
+    return json.jsonify(analysis)
 
 
 def connect_db():
