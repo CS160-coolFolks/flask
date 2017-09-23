@@ -113,6 +113,16 @@ def get_log_filenames(user_id):
                     """, [user_id])
 
 
+def get_log(user_id, log_id):
+    log = query_db("""
+                   SELECT blob
+                   FROM logs
+                   WHERE user_id = ? AND
+                         id = ?
+                   """, [user_id, log_id], one=True)
+    return log["blob"] if log else None
+
+
 def create_log(user_id, filename, blob):
     query_db("""
              INSERT INTO logs (user_id, filename, blob)
@@ -138,10 +148,16 @@ def get_all_confirmations():
                     FROM confirmations
                     """)
 
-    for row in rows:
-        row['is_error'] = bool(row['is_error'])
+    confirmed_errors = []
+    confirmed_non_errors = []
 
-    return rows
+    for row in rows:
+        if row['is_error']:
+            confirmed_errors.append(row['token'])
+        else:
+            confirmed_non_errors.append(row['token'])
+
+    return confirmed_errors, confirmed_non_errors
 
 
 def create_confirmation(token, is_error):
