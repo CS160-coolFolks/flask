@@ -2,6 +2,10 @@
 
 {% block title %}Analyze{% endblock %}
 
+{% block styles %}
+    <link rel="stylesheet" href="/static/css/chartist.js-0.11.0/chartist.css">
+{% endblock %}
+
 {% block body2 %}
     <h1>Analyze logs</h1>
     <form method="POST">
@@ -44,5 +48,6 @@
 {% endblock %}
 
 {% block scripts %}
+    <script src="/static/js/chartist.js-0.11.0/chartist.js"></script>
     <script src="/static/js/error_analysis.js"></script>
 {% endblock %}
