@@ -4,7 +4,10 @@ import os
 import sqlite3
 
 
-SCHEMA_FILE = 'schema.sql'
+DB_SETUP_FILES = [
+    'schema.sql',
+    'starter_confirmations.sql'
+]
 
 DATABASE_FILE = 'database.sqlite3'
 
@@ -28,14 +31,20 @@ def init_schema():
     if db_is_empty() or need_schema_update():
         print('Updating schema, dropping all tables')
 
-        schema = open(SCHEMA_FILE).read()
-        g.db.cursor().executescript(schema)
+        latest_setup_file_mod_time = 0
 
-        schema_mod_time = int(os.stat(SCHEMA_FILE).st_mtime)
+        for setup_file in DB_SETUP_FILES:
+            script = open(setup_file).read()
+            g.db.cursor().executescript(script)
+
+            setup_file_mod_time = int(os.stat(setup_file).st_mtime)
+            if latest_setup_file_mod_time < setup_file_mod_time:
+                latest_setup_file_mod_time = setup_file_mod_time
+
         query_db("""
                  INSERT INTO schema_version (last_modified)
                  VALUES (?)
-                 """, [schema_mod_time])
+                 """, [latest_setup_file_mod_time])
 
         g.db.commit()
 
@@ -58,8 +67,13 @@ def need_schema_update():
         return True
 
     db_mod_time = row['last_modified']
-    schema_mod_time = int(os.stat(SCHEMA_FILE).st_mtime)
-    return schema_mod_time > db_mod_time
+
+    for setup_file in DB_SETUP_FILES:
+        setup_file_mod_time = int(os.stat(setup_file).st_mtime)
+        if setup_file_mod_time > db_mod_time:
+            return True
+
+    return False
 
 
 #

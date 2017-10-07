@@ -64,14 +64,6 @@ CREATE TABLE confirmations (
     is_error INTEGER NOT NULL  -- 0 for no, 1 for yes
 );
 
---INSERT INTO confirmations (token, is_error) VALUES ('AUTHORIZATION_FAILURE', 1);
---INSERT INTO confirmations (token, is_error) VALUES ('AUTHORIZATION_FAILURE', 1);
---INSERT INTO confirmations (token, is_error) VALUES ('AUTHORIZATION_FAILURE', 1);
---INSERT INTO confirmations (token, is_error) VALUES ('AUTHORIZATION_FAILURE', 1);
---INSERT INTO confirmations (token, is_error) VALUES ('AUTHORIZATION_FAILURE', 1);
---INSERT INTO confirmations (token, is_error) VALUES ('AUTHORIZATION_FAILURE', 1);
---INSERT INTO confirmations (token, is_error) VALUES ('AUTHORIZATION_FAILURE', 1);
-
 DROP TABLE IF EXISTS analyses;
 CREATE TABLE analyses (
     log_content_id INTEGER PRIMARY KEY,
