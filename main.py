@@ -8,6 +8,7 @@ from flask import Flask, g, json, session, redirect, request, render_template
 import database
 from LogParser import LogParserBogus
 
+
 SALT_LENGTH = 64
 
 app = Flask(__name__)
