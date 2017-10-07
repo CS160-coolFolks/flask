@@ -64,7 +64,7 @@
                        placeholder="Confirm password"
                        pattern=".......*" {# Must be at least 6 characters #}
                        value="{{ confirmation }}">
-                {% if confirm_password_valid == false %}
+                {% if confirm_valid == false %}
                     <div class="invalid-feedback">
                         {{ confirm_feedback }}
                     </div>
