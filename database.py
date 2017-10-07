@@ -198,6 +198,17 @@ def create_log_content(hash, blob):
     return row['seq']
 
 
+def get_log_content(log_content_id):
+    connect_db()
+
+    log_content = query_db("""
+                           SELECT blob
+                           FROM log_contents
+                           WHERE id = ?
+                           """, [log_content_id], one=True)
+    return log_content["blob"] if log_content else None
+
+
 # No delete_log_content function needed because log_contents are automatically deleted when the last log that refers to
 # them is deleted. :)
 
@@ -222,9 +233,10 @@ def get_log(user_id, log_id):
 
     log = query_db("""
                    SELECT blob
-                   FROM logs
-                   WHERE user_id = ? AND
-                         id = ?
+                   FROM logs, log_contents
+                   WHERE logs.user_id = ? AND
+                         logs.id = ? AND
+                         logs.log_content_id = log_contents.id
                    """, [user_id, log_id], one=True)
     return log["blob"] if log else None
 

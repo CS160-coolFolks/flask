@@ -1,3 +1,4 @@
+import hashlib
 import os
 import re
 
@@ -193,7 +194,24 @@ def post_file_management():
         filename = new_log.filename
         blob = new_log.read()
 
-        database.create_log(user_id, filename, blob)
+        h = hashlib.sha1()
+        h.update(blob)
+        hash = h.digest()
+
+        log_content_id = None
+
+        # Security warning: Since we are using SHA1, this is vulnerable to a hash-collision attack, which could
+        #                   potentially result in a DoS.
+        contents = database.get_log_contents(hash)
+        for content in contents:
+            if blob == content["blob"]:
+                log_content_id = content["id"]
+                break
+
+        if log_content_id is None:
+            log_content_id = database.create_log_content(hash, blob)
+
+        database.create_log(user_id, filename, log_content_id)
 
     else:  # 'delete' in request.form
         # The user pressed the 'Delete' button.
