@@ -113,19 +113,19 @@ function createCharts() {
 }
 
 function filterByTimespan(errors, begin, end) {
-    let filter = _ => true;
+    let predicate = _ => true;
 
     if (begin && end) {
-        filter = error => begin <= moment(error.date) && moment(error.date) <= end;
+        predicate = error => begin <= moment(error.date) && moment(error.date) <= end;
     } else if (begin && !end) {
-        filter = error => begin <= moment(error.date);
+        predicate = error => begin <= moment(error.date);
     } else if (!begin && end) {
-        filter = error => moment(error.date) <= end;
+        predicate = error => moment(error.date) <= end;
     }
 
     const remainingErrors = {};
     for (const type in errors) {
-        const remainingErrorList = filter(errors[type]);
+        const remainingErrorList = errors[type].filter(predicate);
         if (remainingErrorList.length > 0) {
             remainingErrors[type] = remainingErrorList;
         }
