@@ -31,6 +31,11 @@ def db_is_empty():
     return rows is None or len(rows) == 0
 
 
+#
+# TABLE schema_version
+#
+
+
 def need_schema_update():
     row = query_db("""
                    SELECT last_modified
@@ -44,7 +49,13 @@ def need_schema_update():
     return schema_mod_time > db_mod_time
 
 
+#
+# TABLE users
+#
+
+
 def user_exists(email):
+    print('email', email)
     row = query_db("""
                    SELECT id
                    FROM users
@@ -79,7 +90,7 @@ def create_user(email):
     # Create a user without specifying their id. SQLite will automatically allocate an id for them but won't tell us
     # what it is.
     query_db("""
-             INSERT into users (email)
+             INSERT INTO users (email)
              VALUES (?)
              """, [email])
 
@@ -96,13 +107,23 @@ def create_user(email):
     return row['seq']
 
 
+#
+# TABLE passwords
+#
+
+
 def create_password(user_id, salt, password_hash):
     query_db("""
-             INSERT into passwords (user_id, salt, password_hash)
+             INSERT INTO passwords (user_id, salt, password_hash)
              VALUES (?, ?, ?)
              """, [user_id, salt, password_hash])
 
     g.db.commit()
+
+
+#
+# TABLE logs
+#
 
 
 def get_log_filenames(user_id):
@@ -123,11 +144,11 @@ def get_log(user_id, log_id):
     return log["blob"] if log else None
 
 
-def create_log(user_id, filename, blob):
+def create_log(user_id, filename, log_content_id):
     query_db("""
-             INSERT INTO logs (user_id, filename, blob)
+             INSERT INTO logs (user_id, filename, log_content_id)
              VALUES (?, ?, ?)
-             """, [user_id, filename, blob])
+             """, [user_id, filename, log_content_id])
 
     g.db.commit()
 
@@ -140,6 +161,49 @@ def delete_log(user_id, log_id):
              """, [user_id, log_id])
 
     g.db.commit()
+
+
+#
+# TABLE log_contents
+#
+
+
+def get_log_contents(hash):
+    return query_db("""
+                    SELECT id, blob
+                    FROM log_contents
+                    WHERE hash = ?
+                    """, [hash])
+
+
+def create_log_content(hash, blob):
+    # Create a log_content without specifying its id. SQLite will automatically allocate an id for them but won't tell
+    # us what it is.
+    query_db("""
+             INSERT INTO log_contents (blob, hash)
+             VALUES (?, ?)
+             """, [blob, hash])
+
+    g.db.commit()
+
+    # Query the sqlite_sequence table, as recommended by Stack Overflow, to find the id.
+    row = query_db("""
+                   SELECT seq
+                   FROM sqlite_sequence
+                   WHERE name = "log_contents"
+                   """, one=True)
+    assert(row is not None)
+
+    return row['seq']
+
+
+# No delete_log_content function needed because log_contents are automatically deleted when the last log that refers to
+# them is deleted. :)
+
+
+#
+# TABLE confirmations
+#
 
 
 def get_all_confirmations():
@@ -169,6 +233,7 @@ def create_confirmation(token, is_error):
              """, [token, is_error])
 
     # Creating a confirmation invalidates all stored analyses. This is a possible area for optimization.
+    # TODO: Just create a re-analyze button.
     query_db("""
              DELETE FROM analyses
              """)
@@ -176,28 +241,39 @@ def create_confirmation(token, is_error):
     g.db.commit()
 
 
-def get_analysis(log_id):
+#
+# TABLE analyses
+#
+
+
+def get_analysis(log_content_id):
     row = query_db("""
                    SELECT analysis_json
                    FROM analyses
-                   WHERE log_id = ?
-                   """, [log_id], one=True)
+                   WHERE log_content_id = ?
+                   """, [log_content_id], one=True)
 
     return json.loads(row['analysis_json']) if row else None
 
 
-def create_analysis(log_id, analysis):
+def create_analysis(log_content_id, analysis):
     analysis_json = json.dumps(analysis)
 
     query_db("""
-             INSERT INTO analyses (log_id, analysis_json)
+             INSERT INTO analyses (log_content_id, analysis_json)
              VALUES (?, ?)
-             """, [log_id, analysis_json])
+             """, [log_content_id, analysis_json])
 
     g.db.commit()
 
 
+#
+# Helper functions.
+#
+
+
 def query_db(query, args=(), one=False):
+    print('query', query)
     cur = g.db.execute(query, args)
     rows = cur.fetchall()
     cur.close()
