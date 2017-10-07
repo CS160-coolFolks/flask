@@ -1,9 +1,27 @@
 from flask import g
 import json
 import os
+import sqlite3
 
 
 SCHEMA_FILE = 'schema.sql'
+
+DATABASE_FILE = 'database.sqlite3'
+
+
+#
+# Database initialization.
+#
+
+
+def init_db(app):
+    # Call close_db() every time an app context dies. This includes at the end of handling every HTTP request, but also
+    # at the end of the `with` statement just below.
+    app.teardown_appcontext_funcs.append(close_db)
+
+    with app.app_context():
+        connect_db()
+        init_schema()
 
 
 def init_schema():
@@ -31,11 +49,6 @@ def db_is_empty():
     return rows is None or len(rows) == 0
 
 
-#
-# TABLE schema_version
-#
-
-
 def need_schema_update():
     row = query_db("""
                    SELECT last_modified
@@ -50,12 +63,30 @@ def need_schema_update():
 
 
 #
+# Database lifecycle.
+#
+
+
+def connect_db():
+    if not hasattr(g, 'db'):
+        g.db = sqlite3.connect(DATABASE_FILE)
+        g.db.row_factory = sqlite3.Row
+    return g.db
+
+
+def close_db(error):
+    if hasattr(g, 'db'):
+        g.db.close()
+
+
+#
 # TABLE users
 #
 
 
 def user_exists(email):
-    print('email', email)
+    connect_db()
+
     row = query_db("""
                    SELECT id
                    FROM users
@@ -65,6 +96,8 @@ def user_exists(email):
 
 
 def get_user_id(email):
+    connect_db()
+
     row = query_db("""
                    SELECT id
                    FROM users
@@ -74,6 +107,8 @@ def get_user_id(email):
 
 
 def get_password(email):
+    connect_db()
+
     row = query_db("""
                    SELECT salt, password_hash
                    FROM users, passwords
@@ -87,6 +122,8 @@ def get_password(email):
 
 
 def create_user(email):
+    connect_db()
+
     # Create a user without specifying their id. SQLite will automatically allocate an id for them but won't tell us
     # what it is.
     query_db("""
@@ -113,52 +150,12 @@ def create_user(email):
 
 
 def create_password(user_id, salt, password_hash):
+    connect_db()
+
     query_db("""
              INSERT INTO passwords (user_id, salt, password_hash)
              VALUES (?, ?, ?)
              """, [user_id, salt, password_hash])
-
-    g.db.commit()
-
-
-#
-# TABLE logs
-#
-
-
-def get_log_filenames(user_id):
-    return query_db("""
-                    SELECT id, filename
-                    FROM logs
-                    WHERE user_id = ?
-                    """, [user_id])
-
-
-def get_log(user_id, log_id):
-    log = query_db("""
-                   SELECT blob
-                   FROM logs
-                   WHERE user_id = ? AND
-                         id = ?
-                   """, [user_id, log_id], one=True)
-    return log["blob"] if log else None
-
-
-def create_log(user_id, filename, log_content_id):
-    query_db("""
-             INSERT INTO logs (user_id, filename, log_content_id)
-             VALUES (?, ?, ?)
-             """, [user_id, filename, log_content_id])
-
-    g.db.commit()
-
-
-def delete_log(user_id, log_id):
-    query_db("""
-             DELETE FROM logs
-             WHERE user_id = ? AND
-                   id = ?
-             """, [user_id, log_id])
 
     g.db.commit()
 
@@ -169,6 +166,8 @@ def delete_log(user_id, log_id):
 
 
 def get_log_contents(hash):
+    connect_db()
+
     return query_db("""
                     SELECT id, blob
                     FROM log_contents
@@ -177,6 +176,8 @@ def get_log_contents(hash):
 
 
 def create_log_content(hash, blob):
+    connect_db()
+
     # Create a log_content without specifying its id. SQLite will automatically allocate an id for them but won't tell
     # us what it is.
     query_db("""
@@ -202,11 +203,63 @@ def create_log_content(hash, blob):
 
 
 #
+# TABLE logs
+#
+
+
+def get_log_filenames(user_id):
+    connect_db()
+
+    return query_db("""
+                    SELECT id, filename
+                    FROM logs
+                    WHERE user_id = ?
+                    """, [user_id])
+
+
+def get_log(user_id, log_id):
+    connect_db()
+
+    log = query_db("""
+                   SELECT blob
+                   FROM logs
+                   WHERE user_id = ? AND
+                         id = ?
+                   """, [user_id, log_id], one=True)
+    return log["blob"] if log else None
+
+
+def create_log(user_id, filename, log_content_id):
+    connect_db()
+
+    query_db("""
+             INSERT INTO logs (user_id, filename, log_content_id)
+             VALUES (?, ?, ?)
+             """, [user_id, filename, log_content_id])
+
+    g.db.commit()
+
+
+def delete_log(user_id, log_id):
+    connect_db()
+
+    query_db("""
+             DELETE FROM logs
+             WHERE user_id = ? AND
+                   id = ?
+             """, [user_id, log_id])
+
+    g.db.commit()
+
+
+#
 # TABLE confirmations
 #
 
 
 def get_all_confirmations():
+    connect_db()
+
     rows = query_db("""
                     SELECT token, is_error
                     FROM confirmations
@@ -225,6 +278,8 @@ def get_all_confirmations():
 
 
 def create_confirmation(token, is_error):
+    connect_db()
+
     is_error = int(is_error)
 
     query_db("""
@@ -247,6 +302,8 @@ def create_confirmation(token, is_error):
 
 
 def get_analysis(log_content_id):
+    connect_db()
+
     row = query_db("""
                    SELECT analysis_json
                    FROM analyses
@@ -257,6 +314,8 @@ def get_analysis(log_content_id):
 
 
 def create_analysis(log_content_id, analysis):
+    connect_db()
+
     analysis_json = json.dumps(analysis)
 
     query_db("""
@@ -273,7 +332,6 @@ def create_analysis(log_content_id, analysis):
 
 
 def query_db(query, args=(), one=False):
-    print('query', query)
     cur = g.db.execute(query, args)
     rows = cur.fetchall()
     cur.close()

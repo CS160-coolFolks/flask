@@ -1,15 +1,12 @@
-from flask import Flask, g, json, session, redirect, request, render_template
 import os
 import re
+
 import scrypt
-import sqlite3
+from flask import Flask, g, json, session, redirect, request, render_template
 
 import database
+from LogParser import LogParserBogus
 
-from LogParser import LogParser
-
-
-DATABASE = 'database.sqlite3'
 SALT_LENGTH = 64
 
 app = Flask(__name__)
@@ -43,17 +40,13 @@ def post_sign_in():
     password_feedback = 'Please enter your password'
 
     # Check if the fields match our simple regex.
-    if email_valid:
-        email_valid = re.match(r'[^@]+@[^@]+\.[^@]+', email)
-        email_feedback = 'The value you’ve entered is not a valid email address'
+    #if email_valid:
+        #email_valid = re.match(r'[^@]+@[^@]+\.[^@]+', email)
+        #email_feedback = 'The value you’ve entered is not a valid email address'
 
     if password_valid:
         password_valid = len(password) >= 6
         password_feedback = 'The password you’ve entered is too short to be valid'
-
-    # The rest of the checks involve the DB.
-    if email_valid or password_valid:
-        ready_db()
 
     # Check if the user exists in the DB.
     if email_valid:
@@ -120,10 +113,6 @@ def post_sign_up():
         confirmation_valid = password == confirmation
         confirmation_feedback = 'The passwords you’ve entered don’t match'
 
-    # The rest of the checks involve the DB.
-    if email_valid or password_valid:
-        ready_db()
-
     # Check if the user does not already exist in the DB.
     if email_valid:
         email_valid = not database.user_exists(email)
@@ -171,7 +160,6 @@ def get_file_management():
     user_id = session['user_id']
     email = session['email']
 
-    ready_db()
     logs = database.get_log_filenames(user_id)
 
     return render_template('file_management.html',
@@ -187,8 +175,6 @@ def post_file_management():
 
     user_id = session['user_id']
     email = session['email']
-
-    ready_db()
 
     if 'add' in request.form:
         # The user pressed the 'Add file' button.
@@ -229,14 +215,15 @@ def get_error_analysis():
         return redirect('/sign_in?next=/file_management')
 
     user_id = session['user_id']
+    email = session['email']
 
-    ready_db()
     logs = database.get_log_filenames(user_id)
 
     if logs is None:
         return redirect('/file_management')
 
     return render_template('error_analysis.html',
+                           email=email,
                            logs=logs)
 
 
@@ -248,8 +235,6 @@ def get_error_analysis_data(log_id):
         return response
 
     user_id = session['user_id']
-
-    ready_db()
 
     # See if we've done the analysis at some point in the past already.
     analysis = database.get_analysis(log_id)
@@ -264,37 +249,18 @@ def get_error_analysis_data(log_id):
             return response
 
         confirmed_errors, confirmed_non_errors = database.get_all_confirmations()
-        analysis = LogParser.analyze(log_file, confirmed_errors, confirmed_non_errors)
+        analysis = LogParserBogus.analyze(log_file, confirmed_errors, confirmed_non_errors)
 
         database.create_analysis(log_id, analysis)
 
     return json.jsonify(analysis)
 
 
-def connect_db():
-    db = sqlite3.connect(DATABASE)
-    db.row_factory = sqlite3.Row
-    return db
+# Initialize database.
+database.init_db(app)
 
 
-def ready_db():
-    if not hasattr(g, 'db'):
-        g.db = connect_db()
-    return g.db
-
-
-@app.teardown_appcontext
-def close_db(error):
-    if hasattr(g, 'db'):
-        g.db.close()
-
-
-def init_db():
-    with app.app_context():
-        ready_db()
-        database.init_schema()
-
-
+# Initialize secret key used in HTTP cookies.
 def init_secret():
     try:
         secret_key = open('secret_key', 'rb').read()
@@ -307,8 +273,8 @@ def init_secret():
     app.secret_key = secret_key
 
 
-init_db()
 init_secret()
+
 
 if __name__ == '__main__':
     app.run()
