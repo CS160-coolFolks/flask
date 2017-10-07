@@ -232,13 +232,12 @@ def get_log(user_id, log_id):
     connect_db()
 
     log = query_db("""
-                   SELECT blob
-                   FROM logs, log_contents
+                   SELECT log_content_id
+                   FROM logs
                    WHERE logs.user_id = ? AND
-                         logs.id = ? AND
-                         logs.log_content_id = log_contents.id
+                         logs.id = ?
                    """, [user_id, log_id], one=True)
-    return log["blob"] if log else None
+    return log["log_content_id"] if log else None
 
 
 def create_log(user_id, filename, log_content_id):

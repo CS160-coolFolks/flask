@@ -254,22 +254,29 @@ def get_error_analysis_data(log_id):
 
     user_id = session['user_id']
 
+    log_content_id = database.get_log(user_id, log_id)
+
+    if log_content_id is None:
+        response = json.jsonify(error='Log file not found')
+        response.status_code = 404
+        return response
+
     # See if we've done the analysis at some point in the past already.
-    analysis = database.get_analysis(log_id)
+    analysis = database.get_analysis(log_content_id)
 
     # Nope, let's do it now.
     if analysis is None:
-        log_file = database.get_log(user_id, log_id)
+        blob = database.get_log_content(log_content_id)
 
-        if log_file is None:
+        if blob is None:
             response = json.jsonify(error='Log file not found')
             response.status_code = 404
             return response
 
         confirmed_errors, confirmed_non_errors = database.get_all_confirmations()
-        analysis = LogParserBogus.analyze(log_file, confirmed_errors, confirmed_non_errors)
+        analysis = LogParserBogus.analyze(blob, confirmed_errors, confirmed_non_errors)
 
-        database.create_analysis(log_id, analysis)
+        database.create_analysis(log_content_id, analysis)
 
     return json.jsonify(analysis)
 
