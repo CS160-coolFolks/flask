@@ -1,7 +1,8 @@
-from flask import g
 import json
 import os
 import sqlite3
+
+from flask import g
 
 
 DB_SETUP_FILES = [
