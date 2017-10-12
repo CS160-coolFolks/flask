@@ -1,5 +1,6 @@
 const analyses = {};
 
+let chartsShown = false;
 let chartTimeline = null;
 let chartProportionErrors = null;
 let chartProportionPrincipals = null;
@@ -90,23 +91,21 @@ function updateTimespanAppearance() {
 }
 
 function createCharts() {
-    chartTimeline = new Chartist.Bar('#chart-timeline', {
-        labels: ['a', 'b'],
-        series: [[1, 2]]
-    }, {
+    const chartsContainer = document.getElementById('charts');
+    chartsContainer.style.display = '';
+
+    const noData = {};
+
+    chartTimeline = new Chartist.Bar('#chart-timeline', noData {
         width: 900,
         height: 200
     });
-    chartProportionErrors = new Chartist.Pie('#chart-proportion-errors', {
-        series: [1, 2]
-    }, {
+    chartProportionErrors = new Chartist.Pie('#chart-proportion-errors', noData {
         width: 200,
         height: 200,
         donut: true
     });
-    chartProportionPrincipals = new Chartist.Pie('#chart-proportion-auth-principals', {
-        series: [1, 2]
-    }, {
+    chartProportionPrincipals = new Chartist.Pie('#chart-proportion-auth-principals', noData {
         width: 200,
         height: 200
     });
@@ -153,12 +152,14 @@ function filterByChosenTimespan(errors) {
 }
 
 function setCharts(analysis) {
-    console.log(analysis);
+    if (!chartsShown) {
+        chartsShown = false;
+        createCharts();
+    }
 
     let knownErrors = analysis.known_errors;
 
     knownErrors = filterByChosenTimespan(knownErrors);
-    console.log(knownErrors);
 
     setTimelineChart(knownErrors);
     setProportionAuthPrincipalsChart(knownErrors);
@@ -192,8 +193,6 @@ function setProportionAuthPrincipalsChart(errors) {
 }
 
 function main() {
-    createCharts();
-
     // Did a log file start out selected?
     if (isRadioButtonSelected('file')) {
         onFileChange();
