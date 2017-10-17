@@ -243,7 +243,8 @@ def get_error_analysis():
 
     return render_template('error_analysis.html',
                            email=email,
-                           logs=logs)
+                           logs=logs,
+                           page="error_analysis")
 
 
 @app.route('/error_analysis/data/<log_id>.json')
