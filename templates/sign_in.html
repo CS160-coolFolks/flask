@@ -2,6 +2,8 @@
 {% block title %}Sign in{% endblock %}
 {% block body %}
     <div class="container">
+    <div class="row"><div class="col-6 ml-auto mr-auto">
+        <img src="/static/img/cat2.svg" width="360" class="d-block mx-auto" style="margin: -15px auto -35px;">
         <h1>Welcome!</h1>
         <form method="POST">
             <div class="form-group">
@@ -50,5 +52,6 @@
             <button type="submit" class="btn btn-primary">Sign in</button>
         </form>
         <a href="/sign_up?next={{ next }}">Create login</a>
+    </div></div>
     </div>
 {% endblock %}
