@@ -96,22 +96,22 @@ function createCharts() {
 
     const noData = {};
 
-    chartTimeline = new Chartist.Bar('#chart-timeline', noData {
+    chartTimeline = new Chartist.Bar('#chart-timeline', noData, {
         width: 900,
         height: 200
     });
-    chartProportionErrors = new Chartist.Pie('#chart-proportion-errors', noData {
+    chartProportionErrors = new Chartist.Pie('#chart-proportion-errors', noData, {
         width: 200,
         height: 200,
         donut: true
     });
-    chartProportionPrincipals = new Chartist.Pie('#chart-proportion-auth-principals', noData {
+    chartProportionPrincipals = new Chartist.Pie('#chart-proportion-auth-principals', noData, {
         width: 200,
         height: 200
     });
 }
 
-function filterByTimespan(errors, begin, end) {
+function filterByTimespan(errorGroups, begin, end) {
     let predicate = _ => true;
 
     if (begin && end) {
@@ -123,8 +123,8 @@ function filterByTimespan(errors, begin, end) {
     }
 
     const remainingErrors = {};
-    for (const type in errors) {
-        const remainingErrorList = errors[type].filter(predicate);
+    for (const type in errorGroups) {
+        const remainingErrorList = errorGroups[type].filter(predicate);
         if (remainingErrorList.length > 0) {
             remainingErrors[type] = remainingErrorList;
         }
@@ -132,7 +132,7 @@ function filterByTimespan(errors, begin, end) {
     return remainingErrors;
 }
 
-function filterByChosenTimespan(errors) {
+function filterByChosenTimespan(errorGroups) {
     let begin = document.getElementById('from').value;
     let end = document.getElementById('to').value;
 
@@ -148,12 +148,12 @@ function filterByChosenTimespan(errors) {
         end = null;
     }
 
-    return filterByTimespan(errors, begin, end);
+    return filterByTimespan(errorGroups, begin, end);
 }
 
 function setCharts(analysis) {
     if (!chartsShown) {
-        chartsShown = false;
+        chartsShown = true;
         createCharts();
     }
 
@@ -161,24 +161,54 @@ function setCharts(analysis) {
 
     knownErrors = filterByChosenTimespan(knownErrors);
 
+    setTimeInputHints(knownErrors);
+
     setTimelineChart(knownErrors);
     setProportionAuthPrincipalsChart(knownErrors);
     setProportionErrorsChart(knownErrors);
 }
 
-function setTimelineChart(errors) {
-    const labels = Object.keys(errors);
-    const series = Object.values(errors).map(errorList => errorList.length);
+function flatten(arrayOfArrays) {
+    return arrayOfArrays.reduce((a, b) => a.concat(b), []);
+}
+
+function min(a, b) {
+    return a < b ? a : b;
+}
+
+function max(a, b) {
+    return a < b ? b : a;
+}
+
+function minOf(array) {
+    return array.reduce(min);
+}
+
+function maxOf(array) {
+    return array.reduce(max);
+}
+
+function setTimeInputHints(errorGroups) {
+    const errors = flatten(Object.values(errorGroups));
+    const errorDates = errors.map(error => `${error.date} ${error.time}`);
+
+    document.getElementById('from').placeholder = minOf(errorDates);
+    document.getElementById('to').placeholder = maxOf(errorDates);
+}
+
+function setTimelineChart(errorGroups) {
+    const labels = Object.keys(errorGroups);
+    const series = Object.values(errorGroups).map(errorList => errorList.length);
     chartTimeline.update({
         labels,
         series: [series]
     });
 }
 
-function setProportionErrorsChart(errors) {
+function setProportionErrorsChart(errorGroups) {
     const series = [];
-    for (const type in errors) {
-        const errorList = errors[type];
+    for (const type in errorGroups) {
+        const errorList = errorGroups[type];
         series.push({
             value: errorList.length,
             type
@@ -189,7 +219,7 @@ function setProportionErrorsChart(errors) {
     });
 }
 
-function setProportionAuthPrincipalsChart(errors) {
+function setProportionAuthPrincipalsChart(errorGroups) {
 }
 
 function main() {
