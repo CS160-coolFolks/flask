@@ -3,10 +3,10 @@ import os
 import re
 
 import scrypt
-from flask import Flask, g, json, session, redirect, request, render_template
+from flask import Flask, json, session, redirect, request, render_template
 
 import database
-from LogParser import LogParserBogus
+from LogParser import LogStringParser
 
 
 SALT_LENGTH = 64
@@ -275,8 +275,48 @@ def get_error_analysis_data(log_id):
             response.status_code = 404
             return response
 
+        blob = str(blob, 'utf-8')
+
+        error_keys = [
+            'exception',
+            'warn',
+            'error',
+            'fail',
+            'unauthorized',
+            'timeout',
+            'refused',
+            'NoSuchPageException',
+            # '404',
+            # '401',
+            # '500',
+        ]
+
         confirmed_errors, confirmed_non_errors = database.get_all_confirmations()
-        analysis = LogParserBogus.analyze(blob, confirmed_errors, confirmed_non_errors)
+
+        usage_keys = [
+            'DockerServerController',
+            'DockerVolumeController',
+            'ProvisionController',
+            'BlueprintController',
+        ]
+
+        # Put confirmed_errors and usage_keys in lists, which is what LogStringReader expects.
+        confirmed_errors = map(lambda error: [error], confirmed_errors)
+        usage_keys = map(lambda key: [key], usage_keys)
+
+        error_reader = LogStringParser.LogStringReader(blob, error_keys, confirmed_errors, confirmed_non_errors)
+        usage_reader = LogStringParser.LogStringReader(blob, [], usage_keys, [])
+
+        # key: Aug 22 23:20:07 hfvm dchq_rabbitmq[38866]: Missed heartbeats from client, timeout: 60s
+        # value: ['timeout']
+
+        # ('Aug 23', '02:54:07', 'Aug 23 02:54:07 hfvm dchq_tomcat[38866]: 2017-08-23 09:54:07.301  INFO 1 --- [nio-8080-exec-4] o.s.b.a.audit.listener.AuditListener     : AuditEvent [timestamp=Wed Aug 23 09:54:07 UTC 2017, principal=anonymousUser, type=AUTHORIZATION_FAILURE, data={type=org.springframework.security.access.AccessDeniedException, message=Access is denied}]')
+
+        analysis = {
+            'maybe_new_errors': error_reader.maybe_new_errors(),
+            'error_groups': error_reader.find_errors(),
+            'usages': usage_reader.find_errors(),
+        }
 
         database.create_analysis(log_content_id, analysis)
 

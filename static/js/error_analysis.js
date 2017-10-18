@@ -6,6 +6,14 @@ let chartProportionErrors = null;
 let chartProportionPrincipals = null;
 
 
+function parseDatetimeFilter(datetime) {
+    return moment(datetime);
+}
+
+function formatDatetimeFilter(datetime) {
+    return datetime.format('YYYY-MM-DD HH:mm:ss');
+}
+
 function getRadioButtonValue(name) {
     const buttons = document.getElementsByName(name);
 
@@ -58,7 +66,7 @@ function updateTimespanAppearance() {
     const toFeedback = document.getElementById('to-feedback');
 
     if (fromEl.value !== '') {
-        if (moment(fromEl.value).isValid()) {
+        if (parseDatetimeFilter(fromEl.value).isValid()) {
             fromEl.classList.add('is-valid');
             fromEl.classList.remove('is-invalid');
             fromFeedback.style.display = 'none';
@@ -74,7 +82,7 @@ function updateTimespanAppearance() {
     }
 
     if (toEl.value !== '') {
-        if (moment(toEl.value).isValid()) {
+        if (parseDatetimeFilter(toEl.value).isValid()) {
             toEl.classList.add('is-valid');
             toEl.classList.remove('is-invalid');
             toFeedback.style.display = 'none';
@@ -111,15 +119,19 @@ function createCharts() {
     });
 }
 
+function toMoment(error) {
+    return moment(`${error[0]} ${error[1]}`, 'MMM DD HH:mm:ss');
+}
+
 function filterByTimespan(errorGroups, begin, end) {
     let predicate = _ => true;
 
     if (begin && end) {
-        predicate = error => begin <= moment(error.date) && moment(error.date) <= end;
+        predicate = error => begin <= toMoment(error) && toMoment(error) <= end;
     } else if (begin && !end) {
-        predicate = error => begin <= moment(error.date);
+        predicate = error => begin <= toMoment(error);
     } else if (!begin && end) {
-        predicate = error => moment(error.date) <= end;
+        predicate = error => toMoment(error) <= end;
     }
 
     const remainingErrors = {};
@@ -136,14 +148,14 @@ function filterByChosenTimespan(errorGroups) {
     let begin = document.getElementById('from').value;
     let end = document.getElementById('to').value;
 
-    if (begin !== '' && moment(begin).isValid() === true) {
-        begin = moment(begin);
+    if (begin !== '' && parseDatetimeFilter(begin).isValid()) {
+        begin = parseDatetimeFilter(begin);
     } else {
         begin = null;
     }
 
-    if (end !== '' && moment(end).isValid() === true) {
-        end = moment(end);
+    if (end !== '' && parseDatetimeFilter(end).isValid()) {
+        end = parseDatetimeFilter(end);
     } else {
         end = null;
     }
@@ -153,19 +165,20 @@ function filterByChosenTimespan(errorGroups) {
 
 function setCharts(analysis) {
     if (!chartsShown) {
-        chartsShown = true;
+        chartsShown = false;
         createCharts();
     }
 
-    let knownErrors = analysis.known_errors;
+    let errorGroups = analysis.error_groups;
+    console.log(analysis);
 
-    knownErrors = filterByChosenTimespan(knownErrors);
+    errorGroups = filterByChosenTimespan(errorGroups);
 
-    setTimeInputHints(knownErrors);
+    setTimeInputHints(errorGroups);
 
-    setTimelineChart(knownErrors);
-    setProportionAuthPrincipalsChart(knownErrors);
-    setProportionErrorsChart(knownErrors);
+    setTimelineChart(errorGroups);
+    setProportionAuthPrincipalsChart(errorGroups);
+    setProportionErrorsChart(errorGroups);
 }
 
 function flatten(arrayOfArrays) {
@@ -190,10 +203,10 @@ function maxOf(array) {
 
 function setTimeInputHints(errorGroups) {
     const errors = flatten(Object.values(errorGroups));
-    const errorDates = errors.map(error => `${error.date} ${error.time}`);
+    const errorDates = errors.map(toMoment);
 
-    document.getElementById('from').placeholder = minOf(errorDates);
-    document.getElementById('to').placeholder = maxOf(errorDates);
+    document.getElementById('from').placeholder = formatDatetimeFilter(minOf(errorDates));
+    document.getElementById('to').placeholder = formatDatetimeFilter(maxOf(errorDates));
 }
 
 function setTimelineChart(errorGroups) {

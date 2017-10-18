@@ -69,5 +69,5 @@ CREATE TABLE analyses (
     log_content_id INTEGER PRIMARY KEY,
     analysis_json TEXT NOT NULL,
 
-    FOREIGN KEY (log_content_id) REFERENCES log_content (id) ON DELETE CASCADE
+    FOREIGN KEY (log_content_id) REFERENCES log_contents (id) ON DELETE CASCADE
 );
