@@ -154,6 +154,13 @@ def logout():
     return redirect('/')
 
 
+def free_disk_space():
+    # https://stackoverflow.com/a/12327880
+    f = os.open('.', os.O_RDONLY)
+    stats = os.fstatvfs(f)
+    return stats.f_frsize * stats.f_bavail
+
+
 @app.route('/file_management')
 def get_file_management():
     if 'user_id' not in session:
@@ -167,7 +174,8 @@ def get_file_management():
     return render_template('file_management.html',
                            page='file_management',
                            email=email,
-                           logs=logs)
+                           logs=logs,
+                           free_disk_space=free_disk_space() // 1024 // 1024)
 
 
 @app.route('/file_management', methods=['POST'])
