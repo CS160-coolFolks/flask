@@ -234,7 +234,8 @@ def post_file_management():
     return render_template('file_management.html',
                            page='file_management',
                            email=email,
-                           logs=logs)
+                           logs=logs,
+                           free_disk_space=free_disk_space() // 1024 // 1024)
 
 
 @app.route('/error_analysis')
