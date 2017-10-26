@@ -191,11 +191,12 @@ def post_file_management():
         if 'log' not in request.files or request.files['log'].filename == '':
             logs = database.get_log_filenames(user_id)
             upload_valid = False
-            upload_feedback = 'You did’t select a file to upload'
+            upload_feedback = 'You didn’t select a file to upload'
             return render_template('file_management.html',
                                    page='file_management',
                                    email=email,
                                    logs=logs,
+                                   free_disk_space=free_disk_space() // 1024 // 1024,
                                    upload_valid=upload_valid,
                                    upload_feedback=upload_feedback)
 
@@ -233,7 +234,8 @@ def post_file_management():
     return render_template('file_management.html',
                            page='file_management',
                            email=email,
-                           logs=logs)
+                           logs=logs,
+                           free_disk_space=free_disk_space() // 1024 // 1024)
 
 
 @app.route('/error_analysis')
