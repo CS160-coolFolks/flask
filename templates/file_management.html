@@ -7,15 +7,17 @@
     <h1>Please select and upload a log file</h1>
     <form method="POST" enctype="multipart/form-data">
         <div class="form-group">
-            <label for="upload">File input</label>
-            <input id="upload"
-                   name="log"
-                   type="file"
-                   class="form-control-file
-                         {% if upload_valid == false %}
-                             is-invalid
-                         {% endif %}
-                         ">
+            <label class="custom-file">
+                <input type="file"
+                       id="upload"
+                       name="log"
+                       class="custom-file-input
+                             {% if upload_valid == false %}
+                                 is-invalid
+                             {% endif %}
+                             ">
+                <span class="custom-file-control" id="upload-text"></span>
+            </label>
             {% if upload_valid == false %}
                 <div class="invalid-feedback d-block">
                     {{ upload_feedback }}

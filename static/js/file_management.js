@@ -1,5 +1,15 @@
 const addBtn = document.getElementById('add');
 const deleteBtn = document.getElementById('delete');
+const uploadInput = document.getElementById('upload');
+const uploadText = document.getElementById('upload-text');
+
+function displayFilename() {
+    let filename = uploadInput.value;
+    filename = filename.replace(/.*\\/, '');
+    filename = filename.replace(/.*\//, '');
+
+    uploadText.innerText = filename;
+}
 
 function disableButtons() {
     addBtn.disabled = true;
@@ -9,6 +19,8 @@ function disableButtons() {
 }
 
 function main() {
+    uploadInput.addEventListener('change', displayFilename);
+
     addBtn.addEventListener('click', () => requestAnimationFrame(() => {
         disableButtons();
         addThrobber(addBtn, 2);
