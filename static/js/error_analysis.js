@@ -50,8 +50,7 @@ function renderThrobber() {
     const throbber = document.getElementById('throbber');
     if (analysisLoading) {
         throbber.classList.remove('d-none');
-    }
-    else {
+    } else {
         throbber.classList.add('d-none');
     }
 }
@@ -338,6 +337,8 @@ function filterByChosenTimespan(errorGroups) {
 async function setAnalysis(logId) {
     currentLogId = logId;
     analysisLoading = true;
+
+    rerender();
 
     const _analysis = await fetchAnalysis(logId);
 
