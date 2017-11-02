@@ -55,6 +55,15 @@ function renderThrobber() {
     }
 }
 
+function renderListItems() {
+    for (const listItem of document.getElementsByName('file')) {
+        listItem.classList.remove('active');
+    }
+    if (currentLogId !== null) {
+        document.getElementById(currentLogId).classList.add('active');
+    }
+}
+
 function formatDatetimeFilter(datetime) {
     return datetime.format('YYYY-MM-DD HH:mm:ss');
 }
@@ -113,6 +122,7 @@ function renderTimes() {
 
 function renderControls() {
     renderThrobber();
+    renderListItems();
     renderTimes();
 }
 
@@ -304,22 +314,6 @@ function rerender() {
 // UI event handlers
 //
 
-function getRadioButtonValue(name) {
-    const buttons = document.getElementsByName(name);
-
-    for (const button of buttons) {
-        if (button.checked) {
-            return button.value;
-        }
-    }
-
-    return null;
-}
-
-function isRadioButtonSelected(name) {
-    return getRadioButtonValue(name) !== null;
-}
-
 function fetchAnalysis(logId) {
     if (analyses[logId] === undefined) {
         analyses[logId] = fetch(`/error_analysis/data/${logId}.json`, {credentials: 'include'})
@@ -374,16 +368,19 @@ function filterByChosenTimespan(errorGroups) {
 }
 
 async function refreshAnalysis() {
-    const logId = getRadioButtonValue('file');
+    const logId = currentLogId;
 
-    currentLogId = logId;
+    if (logId === null) {
+        return;
+    }
+
     analysisLoading = true;
 
     rerender();
 
     const _analysis = await fetchAnalysis(logId);
 
-    if (currentLogId !== logId) {
+    if (logId !== currentLogId) {
         return;
     }
 
@@ -406,6 +403,11 @@ async function refreshAnalysis() {
     rerender();
 }
 
+function onListItemClicked(e) {
+    currentLogId = e.target.id;
+    refreshAnalysis();
+}
+
 function onDetailsClick() {
     tableDetailsShown = !tableDetailsShown;
     rerender();
@@ -417,14 +419,9 @@ function onDetailsClick() {
 //
 
 function main() {
-    // Did a log file start out selected?
-    if (isRadioButtonSelected('file')) {
-        refreshAnalysis();
-    }
-
     // Listen for future selection changes.
-    for (const radioButton of document.getElementsByName('file')) {
-        radioButton.addEventListener('change', refreshAnalysis);
+    for (const listItem of document.getElementsByName('file')) {
+        listItem.addEventListener('click', onListItemClicked);
     }
 
     document.getElementById('from').addEventListener('change', refreshAnalysis);
