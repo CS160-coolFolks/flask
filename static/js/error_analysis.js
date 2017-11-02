@@ -8,6 +8,7 @@ let errorCategories = null;
 let errorSeries = null;
 
 let tableDetailsShown = false;
+let chart = null;
 
 let rerendering = false;
 
@@ -229,10 +230,15 @@ function renderTable() {
 }
 
 function renderTimelineChart() {
-    const labels = Object.keys(errorGroups);
-    const series = Object.values(errorGroups).map(errorList => errorList.length);
+    if (errorCategories === null) {
+        if (chart) {
+            chart.destroy();
+            chart = null;
+        }
+        return;
+    }
 
-    Highcharts.chart('chart-timeline', {
+    chart = Highcharts.chart('chart-timeline', {
         title: {
             text: undefined
         },
@@ -351,6 +357,12 @@ function filterByChosenTimespan(errorGroups) {
 
 function calculateErrorCategories() {
     const errors = flatten(Object.values(errorGroups));
+
+    if (errors.length === 0) {
+        errorCategories = [];
+        return;
+    }
+
     const errorDates = errors.map(toMoment);
 
     const first = minOf(errorDates);
