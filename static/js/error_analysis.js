@@ -242,10 +242,12 @@ function createCharts() {
         height: 200,
         donut: true
     });
+    /*
     chartProportionPrincipals = new Chartist.Pie('#chart-proportion-auth-principals', noData, {
         width: 200,
         height: 200
     });
+    */
 }
 
 function renderTimelineChart() {
