@@ -75,9 +75,15 @@ function renderTimes() {
     const toFeedback = document.getElementById('to-feedback');
 
     if (analysis === null) {
+        fromEl.disabled = true;
+        toEl.disabled = true;
+
         fromEl.placeholder = 'Start time';
         toEl.placeholder = 'End time';
     } else {
+        fromEl.disabled = false;
+        toEl.disabled = false;
+
         const errorGroups = analysis.error_groups;
         const errors = flatten(Object.values(errorGroups));
         const errorDates = errors.map(toMoment);
@@ -376,6 +382,9 @@ async function refreshAnalysis() {
 
     analysisLoading = true;
 
+    analysis = null;
+    errorGroups = null;
+
     rerender();
 
     const _analysis = await fetchAnalysis(logId);
@@ -384,15 +393,12 @@ async function refreshAnalysis() {
         return;
     }
 
-    analysisLoading = false;
-
     const isEmpty = Object.values(_analysis.error_groups).filter(errors => errors.length > 0).length === 0 &&
                     Object.keys(_analysis.maybe_new_errors).length === 0;
 
-    if (isEmpty) {
-        analysis = null;
-        errorGroups = null;
-    } else {
+    analysisLoading = false;
+
+    if (!isEmpty) {
         analysis = _analysis;
         errorGroups = analysis.error_groups;
         errorGroups = filterByChosenTimespan(errorGroups);
