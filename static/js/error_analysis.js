@@ -204,14 +204,18 @@ function renderTableLargeSubRow(detail) {
     tbody.appendChild(tr);
 }
 
+function removeTomcat(msg) {
+    return msg.replace(/.*dchq_tomcat\[\d+\]: /, '');
+}
+
 function renderTableLargeBody() {
     document.getElementById('thead-details').classList.remove('d-none');
     for (const name in errorGroups) {
         const errorGroup = errorGroups[name];
         const numOccurrences = errorGroup.length;
-        renderTableLargeMainRow(name, numOccurrences, errorGroup[0][2]);
+        renderTableLargeMainRow(name, numOccurrences, removeTomcat(errorGroup[0][2]));
         for (let i = 0; i < numOccurrences - 1; i++) {
-            renderTableLargeSubRow(errorGroup[i][2]);
+            renderTableLargeSubRow(removeTomcat(errorGroup[i][2]));
         }
     }
 }
