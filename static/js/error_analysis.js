@@ -1,6 +1,7 @@
 let currentLogId = null;
 const analyses = {};
-let analysisLoading = true;
+const analysesLoading = {};
+
 let analysis = null;
 let errorGroups = null;
 let errorCategories = null;
@@ -45,11 +46,14 @@ function toMoment(error) {
 //
 
 function renderThrobber() {
-    const throbber = document.getElementById('throbber');
-    if (analysisLoading) {
-        throbber.classList.remove('d-none');
-    } else {
-        throbber.classList.add('d-none');
+    for (const logId in analysesLoading) {
+        const loading = analysesLoading[logId];
+        const throbber = document.getElementById(`throbber-${logId}`);
+        if (loading) {
+            throbber.classList.remove('d-none');
+        } else {
+            throbber.classList.add('d-none');
+        }
     }
 }
 
@@ -290,8 +294,12 @@ function rerender() {
 
 function fetchAnalysis(logId) {
     if (analyses[logId] === undefined) {
+        analysesLoading[logId] = true;
         analyses[logId] = fetch(`/error_analysis/data/${logId}.json`, {credentials: 'include'})
-            .then(response => response.json());
+            .then(response => {
+                analysesLoading[logId] = false;
+                return response.json()
+            });
     }
 
     return analyses[logId];
@@ -394,8 +402,6 @@ async function refreshAnalysis() {
         return;
     }
 
-    analysisLoading = true;
-
     analysis = null;
     errorGroups = null;
     errorCategories = null;
@@ -406,13 +412,12 @@ async function refreshAnalysis() {
     const _analysis = await fetchAnalysis(logId);
 
     if (logId !== currentLogId) {
+        rerender();
         return;
     }
 
     const isEmpty = Object.values(_analysis.error_groups).filter(errors => errors.length > 0).length === 0 &&
                     Object.keys(_analysis.maybe_new_errors).length === 0;
-
-    analysisLoading = false;
 
     if (!isEmpty) {
         analysis = _analysis;
