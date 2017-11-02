@@ -20,3 +20,11 @@ td {
 tbody > tr {
     border-top: 1px solid rgba(0,0,0,.125);
 }
+
+tbody > tr.minor {
+    border-top: none;
+}
+
+tbody > tr.minor > td.detail {
+    border-top: 1px solid rgba(0,0,0,.125);
+}

@@ -186,9 +186,11 @@ function renderTableLargeSubRow(detail) {
     const numEl = document.createElement('td');
 
     const detailEl = document.createElement('td');
+    detailEl.classList.add('detail');
     detailEl.appendChild(document.createTextNode(detail));
 
     const tr = document.createElement('tr');
+    tr.classList.add('minor');
     tr.appendChild(nameEl);
     tr.appendChild(numEl);
     tr.appendChild(detailEl);
