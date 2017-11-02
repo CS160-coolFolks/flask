@@ -8,7 +8,10 @@
 {% endblock %}
 
 {% block body2 %}
-    <h1 id="header">Analyze logs</h1>
+    <h1>
+        Analyze logs
+        <span class="fa fa-spin fa-refresh ml-4 d-none" id="throbber"></span>
+    </h1>
     <form method="POST">
         <div class="form-group">
             <label for="file">File</label>
@@ -47,7 +50,7 @@
         </div>
     </form>
 
-    <div id="charts" style="display: none;">
+    <div class="d-none" id="charts">
         <h1>Charts</h1>
         <button type="button" class="btn btn-secondary">Show details</button>
         <table>
