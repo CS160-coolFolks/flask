@@ -11,13 +11,13 @@ function disableButtons() {
 function main() {
     addBtn.addEventListener('click', () => requestAnimationFrame(() => {
         disableButtons();
-        addThrobber(addBtn);
+        addThrobber(addBtn, 2);
     }));
 
     if (deleteBtn !== null) {
         deleteBtn.addEventListener('click', () => requestAnimationFrame(() => {
             disableButtons();
-            addThrobber(deleteBtn);
+            addThrobber(deleteBtn, 2);
         }));
     }
 }

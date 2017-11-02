@@ -1,10 +1,31 @@
+let currentLogId = null;
 const analyses = {};
+
+let throbberPresent = false;
 
 let chartsShown = false;
 let chartTimeline = null;
 let chartProportionErrors = null;
 let chartProportionPrincipals = null;
 
+
+function addAnalysisThrobber(logId) {
+    currentLogId = logId;
+
+    if (!throbberPresent) {
+        throbberPresent = true;
+        const header = document.getElementById('header');
+        addThrobber(header, 4);
+    }
+}
+
+function removeAnalysisThrobber(logId) {
+    if (currentLogId === logId) {
+        throbberPresent = false;
+        const header = document.getElementById('header');
+        removeThrobber(header);
+    }
+}
 
 function parseDatetimeFilter(datetime) {
     return moment(datetime);
@@ -42,7 +63,9 @@ function fetchAnalysis(logId) {
 async function onFileChange() {
     const logId = getRadioButtonValue('file');
 
+    addAnalysisThrobber(logId);
     const analysis = await fetchAnalysis(logId);
+    removeAnalysisThrobber(logId);
 
     setCharts(analysis);
 }
@@ -53,7 +76,10 @@ async function onTimespanChange() {
     const logId = getRadioButtonValue('file');
 
     if (logId !== null) {
+        addAnalysisThrobber(logId);
         const analysis = await fetchAnalysis(logId);
+        removeAnalysisThrobber(logId);
+
         setCharts(analysis);
     }
 }

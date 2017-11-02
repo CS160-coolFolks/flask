@@ -1,9 +1,9 @@
-function addThrobber(el) {
+function addThrobber(el, leftMarginSize) {
     const throbber = document.createElement('span');
     throbber.classList.add('fa');
     throbber.classList.add('fa-spin');
     throbber.classList.add('fa-refresh');
-    throbber.classList.add('ml-2');
+    throbber.classList.add(`ml-${leftMarginSize}`);
     el.appendChild(throbber);
 }
 

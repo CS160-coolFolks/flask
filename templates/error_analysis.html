@@ -4,10 +4,11 @@
 
 {% block styles %}
     <link rel="stylesheet" href="/static/css/chartist.js-0.11.0/chartist.min.css">
+    <link rel="stylesheet" href="/static/css/font-awesome-4.7.0/font-awesome.css">
 {% endblock %}
 
 {% block body2 %}
-    <h1>Analyze logs</h1>
+    <h1 id="header">Analyze logs</h1>
     <form method="POST">
         <div class="form-group">
             <label for="file">File</label>
@@ -57,5 +58,6 @@
 {% block scripts %}
     <script defer src="/static/js/chartist.js-0.11.0/chartist.min.js"></script>
     <script defer src="/static/js/moment.js-2.18.1/moment.min.js"></script>
+    <script defer src="/static/js/ui.js"></script>
     <script defer src="/static/js/error_analysis.js"></script>
 {% endblock %}
