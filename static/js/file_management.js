@@ -8,25 +8,16 @@ function disableButtons() {
     }
 }
 
-function addButtonThrobber(btn) {
-    const throbber = document.createElement('span');
-    throbber.classList.add('fa');
-    throbber.classList.add('fa-spin');
-    throbber.classList.add('fa-refresh');
-    throbber.classList.add('ml-2');
-    btn.appendChild(throbber);
-}
-
 function main() {
-    addBtn.addEventListener('click', (e) => requestAnimationFrame(() => {
+    addBtn.addEventListener('click', () => requestAnimationFrame(() => {
         disableButtons();
-        addButtonThrobber(addBtn);
+        addThrobber(addBtn);
     }));
 
     if (deleteBtn !== null) {
         deleteBtn.addEventListener('click', () => requestAnimationFrame(() => {
             disableButtons();
-            addButtonThrobber(deleteBtn);
+            addThrobber(deleteBtn);
         }));
     }
 }
