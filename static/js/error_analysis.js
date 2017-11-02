@@ -202,6 +202,8 @@ function setCharts(analysis) {
 
     setTimeInputHints(errorGroups);
 
+    setTable(errorGroups);
+
     setTimelineChart(errorGroups);
     setProportionAuthPrincipalsChart(errorGroups);
     setProportionErrorsChart(errorGroups);
@@ -233,6 +235,38 @@ function setTimeInputHints(errorGroups) {
 
     document.getElementById('from').placeholder = formatDatetimeFilter(minOf(errorDates));
     document.getElementById('to').placeholder = formatDatetimeFilter(maxOf(errorDates));
+}
+
+function addTableSmallRow(name, numOccurrence) {
+    const nameEl = document.createElement('td');
+    nameEl.appendChild(document.createTextNode(name));
+    nameEl.classList.add('pr-3');
+
+    const numEl = document.createElement('td');
+    numEl.appendChild(document.createTextNode(numOccurrence));
+
+    const tr = document.createElement('tr');
+    tr.appendChild(nameEl);
+    tr.appendChild(numEl);
+
+    const tbody = document.getElementById('tbody');
+    tbody.appendChild(tr);
+}
+
+function addTableSmallBody(errorGroups) {
+    for (const name of Object.keys(errorGroups)) {
+        const numOccurrences = errorGroups[name].length;
+        addTableSmallRow(name, numOccurrences);
+    }
+}
+
+function setTable(errorGroups) {
+    const tbody = document.getElementById('tbody');
+    while (tbody.firstChild) {
+        tbody.removeChild(tbody.firstChild);
+    }
+
+    addTableSmallBody(errorGroups);
 }
 
 function setTimelineChart(errorGroups) {
