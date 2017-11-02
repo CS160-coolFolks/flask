@@ -52,7 +52,7 @@
 
     <div class="d-none" id="charts">
         <h1>Charts</h1>
-        <button type="button" class="btn btn-secondary">Show details</button>
+        <button type="button" class="btn btn-secondary" autocomplete="off" id="btn-details">Show details</button>
         <table>
             <thead>
                 <tr>
@@ -73,6 +73,7 @@
 {% block scripts %}
     <script defer src="/static/js/chartist.js-0.11.0/chartist.min.js"></script>
     <script defer src="/static/js/moment.js-2.18.1/moment.min.js"></script>
+    <script defer src="/static/js/bootstrap-4.0.0-beta2/bootstrap.js"></script>
     <script defer src="/static/js/ui.js"></script>
     <script defer src="/static/js/error_analysis.js"></script>
 {% endblock %}

@@ -140,35 +140,74 @@ function renderTableSmallRow(name, numOccurrences) {
 }
 
 function renderTableSmallBody() {
+    document.getElementById('thead-details').classList.add('d-none');
     for (const name in errorGroups) {
         const numOccurrences = errorGroups[name].length;
         renderTableSmallRow(name, numOccurrences);
     }
 }
 
-function renderTableLargeMainRow(name, numOccurrences, firstRow) {
-    console.log(`firstRow ${firstRow}`);
+function renderTableLargeMainRow(name, numOccurrences, firstDetail) {
+    const nameEl = document.createElement('td');
+    nameEl.appendChild(document.createTextNode(name));
+    nameEl.classList.add('pr-3');
+
+    const numEl = document.createElement('td');
+    numEl.appendChild(document.createTextNode(numOccurrences));
+    numEl.classList.add('pr-3');
+
+    const detailEl = document.createElement('td');
+    detailEl.appendChild(document.createTextNode(firstDetail));
+
+    const tr = document.createElement('tr');
+    tr.appendChild(nameEl);
+    tr.appendChild(numEl);
+    tr.appendChild(detailEl);
+
+    const tbody = document.getElementById('tbody');
+    tbody.appendChild(tr);
 }
 
-function renderTableLargeSubRow(row) {
+function renderTableLargeSubRow(detail) {
+    const nameEl = document.createElement('td');
+    nameEl.classList.add('pr-3');
+
+    const numEl = document.createElement('td');
+    numEl.classList.add('pr-3');
+
+    const detailEl = document.createElement('td');
+    detailEl.appendChild(document.createTextNode(detail));
+
+    const tr = document.createElement('tr');
+    tr.appendChild(nameEl);
+    tr.appendChild(numEl);
+    tr.appendChild(detailEl);
+
+    const tbody = document.getElementById('tbody');
+    tbody.appendChild(tr);
 }
 
 function renderTableLargeBody() {
+    document.getElementById('thead-details').classList.remove('d-none');
     for (const name in errorGroups) {
         const errorGroup = errorGroups[name];
         const numOccurrences = errorGroup.length;
-        renderTableLargeMainRow(name, numOccurrences, errorGroup[0]);
+        renderTableLargeMainRow(name, numOccurrences, errorGroup[0][2]);
         for (let i = 0; i < numOccurrences - 1; i++) {
-            renderTableLargeSubRow(errorGroup[i]);
+            renderTableLargeSubRow(errorGroup[i][2]);
         }
     }
 }
 
 function renderTable() {
+    const detailsBtn = document.getElementById('btn-details');
+
     clearTable();
     if (tableDetailsShown) {
+        detailsBtn.classList.add('active');
         renderTableLargeBody();
     } else {
+        detailsBtn.classList.remove('active');
         renderTableSmallBody();
     }
 }
@@ -334,7 +373,9 @@ function filterByChosenTimespan(errorGroups) {
     return filterByTimespan(errorGroups, begin, end);
 }
 
-async function setAnalysis(logId) {
+async function refreshAnalysis() {
+    const logId = getRadioButtonValue('file');
+
     currentLogId = logId;
     analysisLoading = true;
 
@@ -365,12 +406,8 @@ async function setAnalysis(logId) {
     rerender();
 }
 
-function onFileChange() {
-    const logId = getRadioButtonValue('file');
-    setAnalysis(logId);
-}
-
-function onTimespanChange() {
+function onDetailsClick() {
+    tableDetailsShown = !tableDetailsShown;
     rerender();
 }
 
@@ -382,16 +419,18 @@ function onTimespanChange() {
 function main() {
     // Did a log file start out selected?
     if (isRadioButtonSelected('file')) {
-        onFileChange();
+        refreshAnalysis();
     }
 
     // Listen for future selection changes.
     for (const radioButton of document.getElementsByName('file')) {
-        radioButton.addEventListener('change', onFileChange);
+        radioButton.addEventListener('change', refreshAnalysis);
     }
 
-    document.getElementById('from').addEventListener('change', onTimespanChange);
-    document.getElementById('to').addEventListener('change', onTimespanChange);
+    document.getElementById('from').addEventListener('change', refreshAnalysis);
+    document.getElementById('to').addEventListener('change', refreshAnalysis);
+
+    document.getElementById('btn-details').addEventListener('click', onDetailsClick);
 }
 
 document.addEventListener('DOMContentLoaded', main);
