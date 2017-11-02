@@ -4,6 +4,7 @@ const analyses = {};
 let throbberPresent = false;
 
 let chartsShown = false;
+let tableDetailsShown = false;
 let chartTimeline = null;
 let chartProportionErrors = null;
 let chartProportionPrincipals = null;
@@ -202,7 +203,8 @@ function setCharts(analysis) {
 
     setTimeInputHints(errorGroups);
 
-    setTable(errorGroups);
+    tableDetailsShown = false;
+    setTableSmall(errorGroups);
 
     setTimelineChart(errorGroups);
     setProportionAuthPrincipalsChart(errorGroups);
@@ -237,13 +239,13 @@ function setTimeInputHints(errorGroups) {
     document.getElementById('to').placeholder = formatDatetimeFilter(maxOf(errorDates));
 }
 
-function addTableSmallRow(name, numOccurrence) {
+function addTableSmallRow(name, numOccurrences) {
     const nameEl = document.createElement('td');
     nameEl.appendChild(document.createTextNode(name));
     nameEl.classList.add('pr-3');
 
     const numEl = document.createElement('td');
-    numEl.appendChild(document.createTextNode(numOccurrence));
+    numEl.appendChild(document.createTextNode(numOccurrences));
 
     const tr = document.createElement('tr');
     tr.appendChild(nameEl);
@@ -254,19 +256,46 @@ function addTableSmallRow(name, numOccurrence) {
 }
 
 function addTableSmallBody(errorGroups) {
-    for (const name of Object.keys(errorGroups)) {
+    for (const name in errorGroups) {
         const numOccurrences = errorGroups[name].length;
         addTableSmallRow(name, numOccurrences);
     }
 }
 
-function setTable(errorGroups) {
+function addTableLargeMainRow(name, numOccurrences, firstRow) {
+    console.log(firstRow);
+}
+
+function addTableLargeSubRow(row) {
+
+}
+
+function addTableLargeBody(errorGroups) {
+    for (const name in errorGroups) {
+        const errorGroup = errorGroups[name];
+        const numOccurrences = errorGroup.length;
+        addTableLargeMainRow(name, numOccurrences, errorGroup[0]);
+        for (let i = 0; i < numOccurrences - 1; i++) {
+            addTableLargeSubRow(errorGroup[i]);
+        }
+    }
+}
+
+function clearTable() {
     const tbody = document.getElementById('tbody');
     while (tbody.firstChild) {
         tbody.removeChild(tbody.firstChild);
     }
+}
 
+function setTableSmall(errorGroups) {
+    clearTable();
     addTableSmallBody(errorGroups);
+}
+
+function setTableLarge(errorGroups) {
+    clearTable();
+    addTableLargeBody(errorGroups);
 }
 
 function setTimelineChart(errorGroups) {
