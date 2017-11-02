@@ -1,5 +1,8 @@
 {% extends "logged_in.html" %}
 {% block title %}Manage Files{% endblock %}
+{% block styles %}
+    <link rel="stylesheet" href="/static/css/font-awesome-4.7.0/font-awesome.css">
+{% endblock %}
 {% block body2 %}
     <h1>Please select and upload a log file</h1>
     <form method="POST" enctype="multipart/form-data">
