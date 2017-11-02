@@ -1,0 +1,22 @@
+thead > tr {
+    border-bottom: 1px solid rgba(0,0,0,.250);
+}
+
+th {
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+td:first-of-type {
+    border-left: none;
+}
+
+td {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    border-left: 1px solid rgba(0,0,0,.125);
+}
+
+tbody > tr {
+    border-top: 1px solid rgba(0,0,0,.125);
+}

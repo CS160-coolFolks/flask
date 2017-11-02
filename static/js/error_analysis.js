@@ -3,12 +3,10 @@ const analyses = {};
 let analysisLoading = true;
 let analysis = null;
 let errorGroups = null;
+let errorCategories = null;
+let errorSeries = null;
 
-let chartsCreated = false;
 let tableDetailsShown = false;
-let chartTimeline = null;
-let chartProportionErrors = null;
-let chartProportionPrincipals = null;
 
 let rerendering = false;
 
@@ -166,11 +164,9 @@ function renderTableSmallBody() {
 function renderTableLargeMainRow(name, numOccurrences, firstDetail) {
     const nameEl = document.createElement('td');
     nameEl.appendChild(document.createTextNode(name));
-    nameEl.classList.add('pr-3');
 
     const numEl = document.createElement('td');
     numEl.appendChild(document.createTextNode(numOccurrences));
-    numEl.classList.add('pr-3');
 
     const detailEl = document.createElement('td');
     detailEl.appendChild(document.createTextNode(firstDetail));
@@ -186,10 +182,8 @@ function renderTableLargeMainRow(name, numOccurrences, firstDetail) {
 
 function renderTableLargeSubRow(detail) {
     const nameEl = document.createElement('td');
-    nameEl.classList.add('pr-3');
 
     const numEl = document.createElement('td');
-    numEl.classList.add('pr-3');
 
     const detailEl = document.createElement('td');
     detailEl.appendChild(document.createTextNode(detail));
@@ -228,52 +222,25 @@ function renderTable() {
     }
 }
 
-function createCharts() {
-    const chartsContainer = document.getElementById('charts');
-
-    const noData = {};
-
-    chartTimeline = new Chartist.Bar('#chart-timeline', noData, {
-        width: 900,
-        height: 200
-    });
-    chartProportionErrors = new Chartist.Pie('#chart-proportion-errors', noData, {
-        width: 200,
-        height: 200,
-        donut: true
-    });
-    /*
-    chartProportionPrincipals = new Chartist.Pie('#chart-proportion-auth-principals', noData, {
-        width: 200,
-        height: 200
-    });
-    */
-}
-
 function renderTimelineChart() {
     const labels = Object.keys(errorGroups);
     const series = Object.values(errorGroups).map(errorList => errorList.length);
-    chartTimeline.update({
-        labels,
-        series: [series]
-    });
-}
 
-function renderProportionErrorsChart() {
-    const series = [];
-    for (const type in errorGroups) {
-        const errorList = errorGroups[type];
-        series.push({
-            value: errorList.length,
-            type
-        })
-    }
-    chartProportionErrors.update({
-        series
-    });
-}
+    Highcharts.chart('chart-timeline', {
+        title: {
+            text: undefined
+        },
 
-function renderProportionAuthPrincipalsChart() {
+        tooltip: {
+            shared: true
+        },
+
+        xAxis: {
+            categories: errorCategories.map(formatDatetimeFilter)
+        },
+
+        series: errorSeries
+    });
 }
 
 function renderCharts() {
@@ -286,21 +253,18 @@ function renderCharts() {
 
     chartsContainer.classList.remove('d-none');
 
-    if (!chartsCreated) {
-        chartsCreated = true;
-        createCharts();
-    }
-
     renderTable();
 
     renderTimelineChart();
-    renderProportionAuthPrincipalsChart();
-    renderProportionErrorsChart();
 }
 
 function render() {
+    const scrollTop = document.documentElement.scrollTop;
     renderControls();
     renderCharts();
+    requestAnimationFrame(() => {
+        document.documentElement.scrollTop = scrollTop;
+    });
 }
 
 function rerender() {
@@ -375,6 +339,52 @@ function filterByChosenTimespan(errorGroups) {
     return filterByTimespan(errorGroups, begin, end);
 }
 
+function calculateErrorCategories() {
+    const errors = flatten(Object.values(errorGroups));
+    const errorDates = errors.map(toMoment);
+
+    const first = minOf(errorDates);
+    const last = maxOf(errorDates);
+
+    first.minute(0).second(0).millisecond(0);
+
+    last.hour(last.hour() + 1);
+    last.minute(0).second(0).millisecond(0);
+
+    const categories = (last - first) / 3600000;
+
+    errorCategories = [];
+    for (let i = 0; i < categories; i++) {
+        errorCategories.push(moment(first).hour(i));
+    }
+}
+
+function calculateErrorSeries() {
+    errorSeries = [];
+
+    for (const name in errorGroups) {
+        const buckets = [];
+        for (const _ of errorCategories) {
+            buckets.push(0);
+        }
+        for (const error of errorGroups[name]) {
+            const date = toMoment(error);
+
+            let i;
+            for (i = 0; i < errorCategories.length - 1; i++) {
+                if (date < errorCategories[i + 1]) {
+                    buckets[i] += 1;
+                    break;
+                }
+            }
+        }
+        errorSeries.push({
+            name,
+            data: buckets
+        });
+    }
+}
+
 async function refreshAnalysis() {
     const logId = currentLogId;
 
@@ -386,6 +396,8 @@ async function refreshAnalysis() {
 
     analysis = null;
     errorGroups = null;
+    errorCategories = null;
+    errorSeries = null;
 
     rerender();
 
@@ -404,6 +416,8 @@ async function refreshAnalysis() {
         analysis = _analysis;
         errorGroups = analysis.error_groups;
         errorGroups = filterByChosenTimespan(errorGroups);
+        calculateErrorCategories();
+        calculateErrorSeries();
     }
 
     tableDetailsShown = false;
