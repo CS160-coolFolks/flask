@@ -39,6 +39,7 @@ CREATE TABLE logs (
     user_id INTEGER NOT NULL,
     filename TEXT NOT NULL,
     log_content_id INTEGER NOT NULL,
+    creation_time INTEGER NOT NULL,
 
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     FOREIGN KEY (log_content_id) REFERENCES log_contents (id) ON DELETE CASCADE

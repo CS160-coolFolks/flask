@@ -1,6 +1,7 @@
 import json
 import os
 import sqlite3
+import time
 
 from flask import g
 
@@ -258,10 +259,12 @@ def get_log(user_id, log_id):
 def create_log(user_id, filename, log_content_id):
     connect_db()
 
+    creation_time = int(time.time())
+
     query_db("""
-             INSERT INTO logs (user_id, filename, log_content_id)
-             VALUES (?, ?, ?)
-             """, [user_id, filename, log_content_id])
+             INSERT INTO logs (user_id, filename, log_content_id, creation_time)
+             VALUES (?, ?, ?, ?)
+             """, [user_id, filename, log_content_id, creation_time])
 
     g.db.commit()
 
