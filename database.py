@@ -234,11 +234,11 @@ def get_log_content(log_content_id):
 #
 
 
-def get_log_filenames(user_id):
+def get_logs_metadata(user_id):
     connect_db()
 
     return query_db("""
-                    SELECT id, filename
+                    SELECT id, filename, creation_time
                     FROM logs
                     WHERE user_id = ?
                     """, [user_id])

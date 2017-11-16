@@ -169,7 +169,7 @@ def get_file_management():
     user_id = session['user_id']
     email = session['email']
 
-    logs = database.get_log_filenames(user_id)
+    logs = database.get_logs_metadata(user_id)
 
     return render_template('file_management.html',
                            page='file_management',
@@ -189,7 +189,7 @@ def post_file_management():
     if 'add' in request.form:
         # The user pressed the 'Add file' button.
         if 'log' not in request.files or request.files['log'].filename == '':
-            logs = database.get_log_filenames(user_id)
+            logs = database.get_logs_metadata(user_id)
             upload_valid = False
             upload_feedback = 'You didn’t select a file to upload'
             return render_template('file_management.html',
@@ -229,7 +229,7 @@ def post_file_management():
         for log_id in log_ids:
             database.delete_log(user_id, log_id)
 
-    logs = database.get_log_filenames(user_id)
+    logs = database.get_logs_metadata(user_id)
 
     return render_template('file_management.html',
                            page='file_management',
@@ -246,7 +246,7 @@ def get_error_analysis():
     user_id = session['user_id']
     email = session['email']
 
-    logs = database.get_log_filenames(user_id)
+    logs = database.get_logs_metadata(user_id)
 
     if logs is None:
         return redirect('/file_management')

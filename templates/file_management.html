@@ -37,6 +37,7 @@
                     <label class="form-check-label">
                         <input type="checkbox" class="form-check-input" name="{{ log.id }}">
                         {{ log.filename }}
+                        <span data-date class="text-muted ml-2">{{ log.creation_time }}</span>
                     </label>
                 </div>
             {% endfor %}
@@ -51,6 +52,7 @@
     </div>
 {% endblock %}
 {% block scripts %}
+    <script src="/static/js/moment.js-2.18.1/moment.min.js"></script>
     <script src="/static/js/ui.js"></script>
     <script src="/static/js/file_management.js"></script>
 {% endblock %}

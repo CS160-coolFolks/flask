@@ -18,6 +18,12 @@ function disableButtons() {
     }
 }
 
+function renderDates() {
+    for (const span of document.querySelectorAll('span[data-date]')) {
+        span.innerText = moment(parseInt(span.innerText.trim()) * 1000).fromNow();
+    }
+}
+
 function main() {
     uploadInput.addEventListener('change', displayFilename);
 
@@ -32,6 +38,8 @@ function main() {
             addThrobber(deleteBtn, 2);
         }));
     }
+
+    renderDates();
 }
 
 main();
