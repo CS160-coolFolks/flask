@@ -214,8 +214,8 @@ def post_file_management():
         #                   potentially result in a DoS.
         contents = database.get_log_contents(hash)
         for content in contents:
-            if blob == content["blob"]:
-                log_content_id = content["id"]
+            if blob == content['blob']:
+                log_content_id = content['id']
                 break
 
         if log_content_id is None:
@@ -254,7 +254,26 @@ def get_error_analysis():
     return render_template('error_analysis.html',
                            email=email,
                            logs=logs,
-                           page="error_analysis")
+                           page='error_analysis')
+
+
+@app.route('/usage_analysis')
+def get_usage_analysis():
+    if 'user_id' not in session:
+        return redirect('/sign_in?next=/file_management')
+
+    user_id = session['user_id']
+    email = session['email']
+
+    logs = database.get_logs_metadata(user_id)
+
+    if logs is None:
+        return redirect('/file_management')
+
+    return render_template('usage_analysis.html',
+                           email=email,
+                           logs=logs,
+                           page='usage_analysis')
 
 
 @app.route('/error_analysis/data/<log_id>.json')

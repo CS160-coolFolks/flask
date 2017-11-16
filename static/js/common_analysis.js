@@ -40,7 +40,7 @@ class CommonAnalysis {
     // Constructor
     //
 
-    constructor() {
+    constructor(options) {
         this.currentLogId = null;
         this.analyses = {};
         this.analysesLoading = {};
@@ -54,6 +54,8 @@ class CommonAnalysis {
         this.chart = null;
 
         this.rerendering = false;
+
+        this.fetchPath = options.fetchPath;
 
         // Listen for future selection changes.
         for (const listItem of document.getElementsByName('file')) {
@@ -327,7 +329,7 @@ class CommonAnalysis {
     fetchAnalysis(logId) {
         if (this.analyses[logId] === undefined) {
             this.analysesLoading[logId] = true;
-            this.analyses[logId] = fetch(`/error_analysis/data/${logId}.json`, {credentials: 'include'})
+            this.analyses[logId] = fetch(this.fetchPath(logId), {credentials: 'include'})
                 .then(response => {
                     this.analysesLoading[logId] = false;
                     return response.json()
