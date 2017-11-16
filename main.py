@@ -278,15 +278,44 @@ def get_usage_analysis():
 
 @app.route('/error_analysis/data/<log_id>.json')
 def get_error_analysis_data(log_id):
-    return get_analysis_data(log_id, 'error')
+    error_keys = [
+        'exception',
+        'warn',
+        'error',
+        'fail',
+        'unauthorized',
+        'timeout',
+        'refused',
+        'NoSuchPageException',
+        # '404',
+        # '401',
+        # '500',
+    ]
+
+    confirmed_errors, confirmed_non_errors = database.get_all_confirmations()
+
+    # Put confirmed_errors in lists, which is what LogStringReader expects.
+    confirmed_errors = map(lambda error: [error], confirmed_errors)
+
+    return get_analysis_data(log_id, 'error', error_keys, confirmed_errors, confirmed_non_errors)
 
 
 @app.route('/usage_analysis/data/<log_id>.json')
 def get_usage_analysis_data(log_id):
-    return get_analysis_data(log_id, 'usage')
+    usage_keys = [
+        'DockerServerController',
+        'DockerVolumeController',
+        'ProvisionController',
+        'BlueprintController',
+    ]
+
+    # Put usage_keys in lists, which is what LogStringReader expects.
+    usage_keys = map(lambda key: [key], usage_keys)
+
+    return get_analysis_data(log_id, 'usage', [], usage_keys, [])
 
 
-def get_analysis_data(log_id, analysis_type):
+def get_analysis_data(log_id, analysis_type, error_keys, confirmed_errors, confirmed_non_errors):
     if 'user_id' not in session:
         response = json.jsonify(error='Not signed in')
         response.status_code = 401
@@ -315,35 +344,7 @@ def get_analysis_data(log_id, analysis_type):
 
         blob = str(blob, 'utf-8')
 
-        error_keys = [
-            'exception',
-            'warn',
-            'error',
-            'fail',
-            'unauthorized',
-            'timeout',
-            'refused',
-            'NoSuchPageException',
-            # '404',
-            # '401',
-            # '500',
-        ]
-
-        confirmed_errors, confirmed_non_errors = database.get_all_confirmations()
-
-        usage_keys = [
-            'DockerServerController',
-            'DockerVolumeController',
-            'ProvisionController',
-            'BlueprintController',
-        ]
-
-        # Put confirmed_errors and usage_keys in lists, which is what LogStringReader expects.
-        confirmed_errors = map(lambda error: [error], confirmed_errors)
-        usage_keys = map(lambda key: [key], usage_keys)
-
         error_reader = LogStringParser.LogStringReader(blob, error_keys, confirmed_errors, confirmed_non_errors)
-        usage_reader = LogStringParser.LogStringReader(blob, [], usage_keys, [])
 
         # key: Aug 22 23:20:07 hfvm dchq_rabbitmq[38866]: Missed heartbeats from client, timeout: 60s
         # value: ['timeout']
@@ -353,7 +354,6 @@ def get_analysis_data(log_id, analysis_type):
         analysis = {
             'maybe_new_errors': error_reader.maybe_new_errors(),
             'error_groups': error_reader.find_errors(),
-            'usages': usage_reader.find_errors(),
         }
 
         database.create_analysis(log_content_id, analysis_type, analysis)
