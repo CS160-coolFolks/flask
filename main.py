@@ -278,6 +278,15 @@ def get_usage_analysis():
 
 @app.route('/error_analysis/data/<log_id>.json')
 def get_error_analysis_data(log_id):
+    return get_analysis_data(log_id, 'error')
+
+
+@app.route('/usage_analysis/data/<log_id>.json')
+def get_usage_analysis_data(log_id):
+    return get_analysis_data(log_id, 'usage')
+
+
+def get_analysis_data(log_id, analysis_type):
     if 'user_id' not in session:
         response = json.jsonify(error='Not signed in')
         response.status_code = 401
@@ -293,7 +302,7 @@ def get_error_analysis_data(log_id):
         return response
 
     # See if we've done the analysis at some point in the past already.
-    analysis = database.get_analysis(log_content_id)
+    analysis = database.get_analysis(log_content_id, analysis_type)
 
     # Nope, let's do it now.
     if analysis is None:
@@ -347,7 +356,7 @@ def get_error_analysis_data(log_id):
             'usages': usage_reader.find_errors(),
         }
 
-        database.create_analysis(log_content_id, analysis)
+        database.create_analysis(log_content_id, analysis_type, analysis)
 
     return json.jsonify(analysis)
 

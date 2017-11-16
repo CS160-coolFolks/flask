@@ -330,27 +330,28 @@ def create_confirmation(token, is_error):
 #
 
 
-def get_analysis(log_content_id):
+def get_analysis(log_content_id, analysis_type):
     connect_db()
 
     row = query_db("""
                    SELECT analysis_json
                    FROM analyses
                    WHERE log_content_id = ?
-                   """, [log_content_id], one=True)
+                     AND type = ?
+                   """, [log_content_id, analysis_type], one=True)
 
     return json.loads(row['analysis_json']) if row else None
 
 
-def create_analysis(log_content_id, analysis):
+def create_analysis(log_content_id, analysis_type, analysis):
     connect_db()
 
     analysis_json = json.dumps(analysis)
 
     query_db("""
-             INSERT INTO analyses (log_content_id, analysis_json)
-             VALUES (?, ?)
-             """, [log_content_id, analysis_json])
+             INSERT INTO analyses (log_content_id, type, analysis_json)
+             VALUES (?, ?, ?)
+             """, [log_content_id, analysis_type, analysis_json])
 
     g.db.commit()
 

@@ -68,6 +68,7 @@ CREATE TABLE confirmations (
 DROP TABLE IF EXISTS analyses;
 CREATE TABLE analyses (
     log_content_id INTEGER PRIMARY KEY,
+    type TEXT NOT NULL,
     analysis_json TEXT NOT NULL,
 
     FOREIGN KEY (log_content_id) REFERENCES log_contents (id) ON DELETE CASCADE
