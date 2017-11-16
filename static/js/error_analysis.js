@@ -476,5 +476,3 @@ function main() {
 }
 
 document.addEventListener('DOMContentLoaded', main);
-
-document.body.style['overflow-y'] = 'scroll';
