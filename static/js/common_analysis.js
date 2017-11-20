@@ -79,9 +79,11 @@ class CommonAnalysis {
             const loading = this.analysesLoading[logId];
             const throbber = document.getElementById(`throbber-${logId}`);
             if (loading) {
-                throbber.classList.remove('d-none');
+                throbber.classList.add('visible');
+                throbber.classList.remove('invisible');
             } else {
-                throbber.classList.add('d-none');
+                throbber.classList.remove('visible');
+                throbber.classList.add('invisible');
             }
         }
     }
