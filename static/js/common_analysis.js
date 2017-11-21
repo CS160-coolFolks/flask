@@ -394,6 +394,8 @@ class CommonAnalysis {
         const first = minOf(errorDates);
         const last = maxOf(errorDates);
 
+        const firstHour = first.hour();
+
         first.minute(0).second(0).millisecond(0);
 
         last.hour(last.hour() + 1);
@@ -403,7 +405,7 @@ class CommonAnalysis {
 
         this.errorCategories = [];
         for (let i = 0; i < categories; i++) {
-            this.errorCategories.push(moment(first).hour(i));
+            this.errorCategories.push(moment(first).hour(firstHour + i));
         }
     }
 
@@ -418,12 +420,16 @@ class CommonAnalysis {
             for (const error of this.errorGroups[name]) {
                 const date = toMoment(error);
 
-                let i;
-                for (i = 0; i < this.errorCategories.length - 1; i++) {
+                let placed = false;
+                for (let i = 0; i < this.errorCategories.length - 1; i++) {
                     if (date < this.errorCategories[i + 1]) {
                         buckets[i] += 1;
+                        placed = true;
                         break;
                     }
+                }
+                if (!placed) {
+                    buckets[this.errorCategories.length - 1] += 1;
                 }
             }
             this.errorSeries.push({
