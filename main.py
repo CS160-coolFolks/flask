@@ -190,19 +190,28 @@ def post_file_management():
         # The user pressed the 'Add file' button.
         if 'log' not in request.files or request.files['log'].filename == '':
             logs = database.get_logs_metadata(user_id)
-            upload_valid = False
-            upload_feedback = 'You didn’t select a file to upload'
             return render_template('file_management.html',
                                    page='file_management',
                                    email=email,
                                    logs=logs,
                                    free_disk_space=free_disk_space() // 1024 // 1024,
-                                   upload_valid=upload_valid,
-                                   upload_feedback=upload_feedback)
+                                   upload_valid=False,
+                                   upload_feedback='You didn’t select a file to upload')
 
         new_log = request.files['log']
         filename = new_log.filename
         blob = new_log.read()
+
+        if not valid_log(blob):
+            logs = database.get_logs_metadata(user_id)
+            return render_template('file_management.html',
+                                   page='file_management',
+                                   email=email,
+                                   logs=logs,
+                                   free_disk_space=free_disk_space() // 1024 // 1024,
+                                   upload_valid=False,
+                                   upload_feedback='Not a valid log file'
+                                   )
 
         h = hashlib.sha1()
         h.update(blob)
@@ -236,6 +245,10 @@ def post_file_management():
                            email=email,
                            logs=logs,
                            free_disk_space=free_disk_space() // 1024 // 1024)
+
+
+def valid_log(blob):
+    return blob[0:3] == b'Aug'
 
 
 @app.route('/error_analysis')
