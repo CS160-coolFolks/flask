@@ -3,7 +3,7 @@
 //
 
 function flatten(arrayOfArrays) {
-    return arrayOfArrays.reduce((a, b) => a.concat(b), []);
+    return [].concat(...arrayOfArrays);
 }
 
 function min(a, b) {
