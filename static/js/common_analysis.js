@@ -1,3 +1,15 @@
+const TIMELINE_GROUP_SIZES = [
+    1 * 60 * 60 * 1000,
+        15 * 60 * 1000,
+         5 * 60 * 1000,
+         1 * 60 * 1000,
+             15 * 1000,
+              5 * 1000,
+              1 * 1000
+];
+
+
+
 //
 // Utility
 //
@@ -381,7 +393,7 @@ class CommonAnalysis {
         return CommonAnalysis.filterByTimespan(errorGroups, begin, end);
     }
 
-    calculateErrorCategories() {
+    calculateErrorCategories(milliseconds) {
         const errors = flatten(Object.values(this.errorGroups));
 
         if (errors.length === 0) {
@@ -394,18 +406,14 @@ class CommonAnalysis {
         const first = minOf(errorDates);
         const last = maxOf(errorDates);
 
-        const firstHour = first.hour();
+        const firstCategory = Math.floor(first.valueOf() / milliseconds);
+        const lastCategory = Math.floor(last.valueOf() / milliseconds + 1);
 
-        first.minute(0).second(0).millisecond(0);
-
-        last.hour(last.hour() + 1);
-        last.minute(0).second(0).millisecond(0);
-
-        const categories = (last - first) / 3600000;
+        const categories = lastCategory - firstCategory;
 
         this.errorCategories = [];
         for (let i = 0; i < categories; i++) {
-            this.errorCategories.push(moment(first).hour(firstHour + i));
+            this.errorCategories.push(moment((firstCategory + i) * milliseconds));
         }
     }
 
@@ -467,7 +475,12 @@ class CommonAnalysis {
             this.analysis = _analysis;
             this.errorGroups = this.analysis.error_groups;
             this.errorGroups = CommonAnalysis.filterByChosenTimespan(this.errorGroups);
-            this.calculateErrorCategories();
+            for (const milliseconds of TIMELINE_GROUP_SIZES) {
+                this.calculateErrorCategories(milliseconds);
+                if (this.errorCategories.length >= 5) {
+                    break;
+                }
+            }
             this.calculateErrorSeries();
         }
 
