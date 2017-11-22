@@ -169,7 +169,7 @@ def get_file_management():
     user_id = session['user_id']
     email = session['email']
 
-    logs = database.get_log_filenames(user_id)
+    logs = database.get_logs_metadata(user_id)
 
     return render_template('file_management.html',
                            page='file_management',
@@ -189,20 +189,29 @@ def post_file_management():
     if 'add' in request.form:
         # The user pressed the 'Add file' button.
         if 'log' not in request.files or request.files['log'].filename == '':
-            logs = database.get_log_filenames(user_id)
-            upload_valid = False
-            upload_feedback = 'You didn’t select a file to upload'
+            logs = database.get_logs_metadata(user_id)
             return render_template('file_management.html',
                                    page='file_management',
                                    email=email,
                                    logs=logs,
                                    free_disk_space=free_disk_space() // 1024 // 1024,
-                                   upload_valid=upload_valid,
-                                   upload_feedback=upload_feedback)
+                                   upload_valid=False,
+                                   upload_feedback='You didn’t select a file to upload')
 
         new_log = request.files['log']
         filename = new_log.filename
         blob = new_log.read()
+
+        if not valid_log(blob):
+            logs = database.get_logs_metadata(user_id)
+            return render_template('file_management.html',
+                                   page='file_management',
+                                   email=email,
+                                   logs=logs,
+                                   free_disk_space=free_disk_space() // 1024 // 1024,
+                                   upload_valid=False,
+                                   upload_feedback='Not a valid log file'
+                                   )
 
         h = hashlib.sha1()
         h.update(blob)
@@ -214,8 +223,8 @@ def post_file_management():
         #                   potentially result in a DoS.
         contents = database.get_log_contents(hash)
         for content in contents:
-            if blob == content["blob"]:
-                log_content_id = content["id"]
+            if blob == content['blob']:
+                log_content_id = content['id']
                 break
 
         if log_content_id is None:
@@ -229,12 +238,17 @@ def post_file_management():
         for log_id in log_ids:
             database.delete_log(user_id, log_id)
 
-    logs = database.get_log_filenames(user_id)
+    logs = database.get_logs_metadata(user_id)
 
     return render_template('file_management.html',
                            page='file_management',
                            email=email,
-                           logs=logs)
+                           logs=logs,
+                           free_disk_space=free_disk_space() // 1024 // 1024)
+
+
+def valid_log(blob):
+    return blob[0:3] == b'Aug'
 
 
 @app.route('/error_analysis')
@@ -245,7 +259,7 @@ def get_error_analysis():
     user_id = session['user_id']
     email = session['email']
 
-    logs = database.get_log_filenames(user_id)
+    logs = database.get_logs_metadata(user_id)
 
     if logs is None:
         return redirect('/file_management')
@@ -253,11 +267,68 @@ def get_error_analysis():
     return render_template('error_analysis.html',
                            email=email,
                            logs=logs,
-                           page="error_analysis")
+                           page='error_analysis')
+
+
+@app.route('/usage_analysis')
+def get_usage_analysis():
+    if 'user_id' not in session:
+        return redirect('/sign_in?next=/file_management')
+
+    user_id = session['user_id']
+    email = session['email']
+
+    logs = database.get_logs_metadata(user_id)
+
+    if logs is None:
+        return redirect('/file_management')
+
+    return render_template('usage_analysis.html',
+                           email=email,
+                           logs=logs,
+                           page='usage_analysis')
 
 
 @app.route('/error_analysis/data/<log_id>.json')
 def get_error_analysis_data(log_id):
+    error_keys = [
+        'exception',
+        'warn',
+        'error',
+        'fail',
+        'unauthorized',
+        'timeout',
+        'refused',
+        'NoSuchPageException',
+        # '404',
+        # '401',
+        # '500',
+    ]
+
+    confirmed_errors, confirmed_non_errors = database.get_all_confirmations()
+
+    # Put confirmed_errors in lists, which is what LogStringReader expects.
+    confirmed_errors = map(lambda error: [error], confirmed_errors)
+
+    return get_analysis_data(log_id, 'error', error_keys, confirmed_errors, confirmed_non_errors)
+
+
+@app.route('/usage_analysis/data/<log_id>.json')
+def get_usage_analysis_data(log_id):
+    usage_keys = [
+        'DockerServerController',
+        'DockerVolumeController',
+        'ProvisionController',
+        'BlueprintController',
+    ]
+
+    # Put usage_keys in lists, which is what LogStringReader expects.
+    usage_keys = map(lambda key: [key], usage_keys)
+
+    return get_analysis_data(log_id, 'usage', [], usage_keys, [])
+
+
+def get_analysis_data(log_id, analysis_type, error_keys, confirmed_errors, confirmed_non_errors):
     if 'user_id' not in session:
         response = json.jsonify(error='Not signed in')
         response.status_code = 401
@@ -273,7 +344,7 @@ def get_error_analysis_data(log_id):
         return response
 
     # See if we've done the analysis at some point in the past already.
-    analysis = database.get_analysis(log_content_id)
+    analysis = database.get_analysis(log_content_id, analysis_type)
 
     # Nope, let's do it now.
     if analysis is None:
@@ -286,35 +357,7 @@ def get_error_analysis_data(log_id):
 
         blob = str(blob, 'utf-8')
 
-        error_keys = [
-            'exception',
-            'warn',
-            'error',
-            'fail',
-            'unauthorized',
-            'timeout',
-            'refused',
-            'NoSuchPageException',
-            # '404',
-            # '401',
-            # '500',
-        ]
-
-        confirmed_errors, confirmed_non_errors = database.get_all_confirmations()
-
-        usage_keys = [
-            'DockerServerController',
-            'DockerVolumeController',
-            'ProvisionController',
-            'BlueprintController',
-        ]
-
-        # Put confirmed_errors and usage_keys in lists, which is what LogStringReader expects.
-        confirmed_errors = map(lambda error: [error], confirmed_errors)
-        usage_keys = map(lambda key: [key], usage_keys)
-
         error_reader = LogStringParser.LogStringReader(blob, error_keys, confirmed_errors, confirmed_non_errors)
-        usage_reader = LogStringParser.LogStringReader(blob, [], usage_keys, [])
 
         # key: Aug 22 23:20:07 hfvm dchq_rabbitmq[38866]: Missed heartbeats from client, timeout: 60s
         # value: ['timeout']
@@ -324,10 +367,9 @@ def get_error_analysis_data(log_id):
         analysis = {
             'maybe_new_errors': error_reader.maybe_new_errors(),
             'error_groups': error_reader.find_errors(),
-            'usages': usage_reader.find_errors(),
         }
 
-        database.create_analysis(log_content_id, analysis)
+        database.create_analysis(log_content_id, analysis_type, analysis)
 
     return json.jsonify(analysis)
 

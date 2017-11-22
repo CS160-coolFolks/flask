@@ -39,6 +39,7 @@ CREATE TABLE logs (
     user_id INTEGER NOT NULL,
     filename TEXT NOT NULL,
     log_content_id INTEGER NOT NULL,
+    creation_time INTEGER NOT NULL,
 
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     FOREIGN KEY (log_content_id) REFERENCES log_contents (id) ON DELETE CASCADE
@@ -66,8 +67,12 @@ CREATE TABLE confirmations (
 
 DROP TABLE IF EXISTS analyses;
 CREATE TABLE analyses (
-    log_content_id INTEGER PRIMARY KEY,
+    log_content_id INTEGER NOT NULL,
+    type TEXT NOT NULL,
     analysis_json TEXT NOT NULL,
 
     FOREIGN KEY (log_content_id) REFERENCES log_contents (id) ON DELETE CASCADE
 );
+
+DROP INDEX IF EXISTS analysis_log_content_id_type;
+CREATE INDEX analysis_log_content_id_type ON analyses (log_content_id, type);

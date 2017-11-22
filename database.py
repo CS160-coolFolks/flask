@@ -1,6 +1,7 @@
 import json
 import os
 import sqlite3
+import time
 
 from flask import g
 
@@ -233,11 +234,11 @@ def get_log_content(log_content_id):
 #
 
 
-def get_log_filenames(user_id):
+def get_logs_metadata(user_id):
     connect_db()
 
     return query_db("""
-                    SELECT id, filename
+                    SELECT id, filename, creation_time
                     FROM logs
                     WHERE user_id = ?
                     """, [user_id])
@@ -258,10 +259,12 @@ def get_log(user_id, log_id):
 def create_log(user_id, filename, log_content_id):
     connect_db()
 
+    creation_time = int(time.time())
+
     query_db("""
-             INSERT INTO logs (user_id, filename, log_content_id)
-             VALUES (?, ?, ?)
-             """, [user_id, filename, log_content_id])
+             INSERT INTO logs (user_id, filename, log_content_id, creation_time)
+             VALUES (?, ?, ?, ?)
+             """, [user_id, filename, log_content_id, creation_time])
 
     g.db.commit()
 
@@ -327,27 +330,28 @@ def create_confirmation(token, is_error):
 #
 
 
-def get_analysis(log_content_id):
+def get_analysis(log_content_id, analysis_type):
     connect_db()
 
     row = query_db("""
                    SELECT analysis_json
                    FROM analyses
                    WHERE log_content_id = ?
-                   """, [log_content_id], one=True)
+                     AND type = ?
+                   """, [log_content_id, analysis_type], one=True)
 
     return json.loads(row['analysis_json']) if row else None
 
 
-def create_analysis(log_content_id, analysis):
+def create_analysis(log_content_id, analysis_type, analysis):
     connect_db()
 
     analysis_json = json.dumps(analysis)
 
     query_db("""
-             INSERT INTO analyses (log_content_id, analysis_json)
-             VALUES (?, ?)
-             """, [log_content_id, analysis_json])
+             INSERT INTO analyses (log_content_id, type, analysis_json)
+             VALUES (?, ?, ?)
+             """, [log_content_id, analysis_type, analysis_json])
 
     g.db.commit()
 

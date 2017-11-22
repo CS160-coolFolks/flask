@@ -1,61 +1,9 @@
-{% extends "logged_in.html" %}
+{% extends "common_analysis.html" %}
 
-{% block title %}Analyze{% endblock %}
+{% block title %}Error Analysis{% endblock %}
 
-{% block styles %}
-    <link rel="stylesheet" href="/static/css/chartist.js-0.11.0/chartist.min.css">
-{% endblock %}
+{% block header %}Error Analysis{% endblock %}
 
-{% block body2 %}
-    <h1>Analyze logs</h1>
-    <form method="POST">
-        <div class="form-group">
-            <label for="file">File</label>
-            {% for log in logs %}
-                <div class="form-check">
-                    <label class="form-check-label">
-                        <input class="form-check-input" type="radio" name="file" value="{{ log.id }}">
-                        {{ log.filename }}
-                    </label>
-                </div>
-            {% endfor %}
-        </div>
-
-        <div class="form-group">
-            <label for="from">Start time</label>
-            <input id="from"
-                   name="from"
-                   type="text"
-                   class="form-control"
-                   placeholder="Start time">
-            <div id="from-feedback" class="invalid-feedback" style="display: none;">
-                The value you’ve entered is not a valid date/time (use ISO 8601 formatting: 2013-02-08 09:30:26.123)
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label for="to">End time</label>
-            <input id="to"
-                   name="to"
-                   type="text"
-                   class="form-control"
-                   placeholder="End time">
-            <div id="to-feedback" class="invalid-feedback" style="display: none;">
-                The value you’ve entered is not a valid date/time (use ISO 8601 formatting: 2013-02-08 09:30:26.123)
-            </div>
-        </div>
-    </form>
-
-    <div id="charts" style="display: none;">
-        <h1>Charts</h1>
-        <div id="chart-timeline" class="ct-chart"></div>
-        <div id="chart-proportion-errors" class="ct-chart"></div>
-        <div id="chart-proportion-auth-principals" class="ct-chart"></div>
-    </div>
-{% endblock %}
-
-{% block scripts %}
-    <script defer src="/static/js/chartist.js-0.11.0/chartist.min.js"></script>
-    <script defer src="/static/js/moment.js-2.18.1/moment.min.js"></script>
-    <script defer src="/static/js/error_analysis.js"></script>
+{% block scripts2 %}
+    <script src="/static/js/error_analysis.js"></script>
 {% endblock %}
