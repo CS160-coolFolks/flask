@@ -1,4 +1,10 @@
-# Setup
+# Flask
+
+[![Build Status](https://travis-ci.org/CS160-coolFolks/flask.svg?branch=master)](https://travis-ci.org/CS160-coolFolks/flask)
+
+The main UI for running the log analysis process for SJSU's CS160 in Fall 2017.
+
+## Setup
 
 Install python3. Via Homebrew it's `brew install python3`.
 
@@ -8,7 +14,7 @@ Install the dependencies for this flask app with:
 $ pip3 install flask scrypt
 ```
 
-# Running
+## Running
 
 ```sh
 $ export FLASK_APP=main.py
