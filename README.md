@@ -10,6 +10,13 @@ The main UI for running the log analysis process for SJSU's CS160 in Fall 2017.
 
 Install python3. Via Homebrew it's `brew install python3`.
 
+Create a virtualenv.
+
+```sh
+$ python3 -m venv env
+$ source env/bin/activate
+```
+
 Install the dependencies for this flask app with:
 
 ```sh
@@ -19,9 +26,10 @@ $ pip3 install flask scrypt
 ### Running
 
 ```sh
+$ source env/bin/activate
 $ export FLASK_APP=main.py
 $ export FLASK_DEBUG=true
-$ flask run
+$ python3 -m flask run
 ```
 
 This will launch the server and sets up a file watcher on Python files.
