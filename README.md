@@ -10,7 +10,7 @@ The main UI for running the log analysis process for SJSU's CS160 in Fall 2017.
 
 Install python3. Via Homebrew it's `brew install python3`.
 
-Create a virtualenv.
+Create a virtualenv:
 
 ```sh
 $ python3 -m venv env
@@ -38,8 +38,17 @@ have to re-run `flask run` for them to take effect.
 
 ## Deploying to Docker
 
+Build or download the image:
+
 ```sh
 $ docker build -t coolfolks/log_analytics .
+$ # or...
+$ docker pull coolfolks/log_analysis
+```
+
+Run the image:
+
+```sh
 $ docker run -it --rm -p 5000:5000 coolfolks/log_analytics
 ```
 
