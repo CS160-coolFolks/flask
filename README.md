@@ -39,8 +39,8 @@ have to re-run `flask run` for them to take effect.
 ## Deploying to Docker
 
 ```sh
-$ docker build -t hg-log-analytics .
-$ docker run -it --rm -p 5000:5000 hg-log-analytics
+$ docker build -t coolfolks/log-analytics .
+$ docker run -it --rm -p 5000:5000 coolfolks/log-analytics
 ```
 
-Visit http://localhost:5000 on Linux, 192.168.99.100:5000 on Mac.
+Visit http://localhost:5000 on Linux, http://192.168.99.100:5000 on Mac.
