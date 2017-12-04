@@ -248,7 +248,22 @@ def post_file_management():
 
 
 def valid_log(blob):
-    return blob[0:3] == b'Aug'
+    # Check that the first line of the log begins with a date.
+    # This will catch things that are obviously not logs, like JPG files that users try to upload.
+    return blob[0:3] in [
+            b'Jan',
+            b'Feb',
+            b'Mar',
+            b'Apr',
+            b'May',
+            b'Jun',
+            b'Jul',
+            b'Aug',
+            b'Sep',
+            b'Oct',
+            b'Nov',
+            b'Dec',
+    ]
 
 
 @app.route('/error_analysis')
